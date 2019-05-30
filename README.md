@@ -1,2 +1,2 @@
-# spring-boot-cloud-balancing
-An example of Cloud Balancing using OptaPlanner and SpringBoot
+# spring-boot-task-assigning
+An example of Task Assigning using OptaPlanner and SpringBoot
