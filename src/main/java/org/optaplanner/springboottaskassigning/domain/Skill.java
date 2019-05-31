@@ -40,6 +40,7 @@ public class Skill extends AbstractPersistable {
     // Complex methods
     // ************************************************************************
 
+
     public String getLabel() {
         return name;
     }

@@ -156,6 +156,7 @@ public class Task extends TaskOrEmployee {
     // Complex methods
     // ************************************************************************
 
+    @JsonIgnore
     public int getMissingSkillCount() {
         if (employee == null) {
             return 0;

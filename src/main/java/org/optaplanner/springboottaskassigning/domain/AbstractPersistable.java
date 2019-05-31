@@ -25,10 +25,18 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Version;
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.optaplanner.core.api.domain.lookup.PlanningId;
+import org.optaplanner.core.api.score.constraint.ConstraintMatch;
 
 @MappedSuperclass
-public abstract class AbstractPersistable implements Serializable {
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
+public abstract class AbstractPersistable implements Serializable,
+                                                     Comparable<AbstractPersistable> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -71,6 +79,20 @@ public abstract class AbstractPersistable implements Serializable {
 
     public void setVersion(Long version) {
         this.version = version;
+    }
+
+    /**
+     * Used by the GUI to sort the {@link ConstraintMatch} list
+     * by {@link ConstraintMatch#getJustificationList()}.
+     * @param other never null
+     * @return comparison
+     */
+    @Override
+    public int compareTo(AbstractPersistable other) {
+        return new CompareToBuilder()
+                .append(getClass().getName(), other.getClass().getName())
+                .append(id, other.id)
+                .toComparison();
     }
 
     @Override

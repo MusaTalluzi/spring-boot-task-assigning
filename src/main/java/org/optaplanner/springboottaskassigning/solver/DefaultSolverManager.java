@@ -35,7 +35,7 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultSolverManager.class);
 
-    private static final String SOLVER_CONFIG = "org/optaplanner/springboottaskassigning/solver/taskAssigningSolverConfig.xml";
+    public static final String SOLVER_CONFIG = "org/optaplanner/springboottaskassigning/solver/taskAssigningSolverConfig.xml";
 
     private ExecutorService executorService;
     private SolverFactory<Solution_> solverFactory;
@@ -74,6 +74,8 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
         }
     }
 
+    //TODO handle error when tenantId does not exist
+    
     @Override
     public Solution_ getBestSolution(Comparable<?> tenantId) {
         logger.debug("Getting best solution of tenantId ({}).", tenantId);

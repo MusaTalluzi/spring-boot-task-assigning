@@ -28,7 +28,8 @@ public class Employee extends TaskOrEmployee {
     private String fullName;
 
     private Set<Skill> skillSet;
-    private Map<Customer, Affinity> affinityMap;
+
+    private Map<Long, Affinity> customerIdToAffinityMap;
 
     public Employee() {
     }
@@ -37,7 +38,7 @@ public class Employee extends TaskOrEmployee {
         super(id, tenantId);
         this.fullName = fullName;
         skillSet = new LinkedHashSet<>();
-        affinityMap = new LinkedHashMap<>();
+        customerIdToAffinityMap = new LinkedHashMap<>();
     }
 
     public String getFullName() {
@@ -56,12 +57,12 @@ public class Employee extends TaskOrEmployee {
         this.skillSet = skillSet;
     }
 
-    public Map<Customer, Affinity> getAffinityMap() {
-        return affinityMap;
+    public Map<Long, Affinity> getCustomerIdToAffinityMap() {
+        return customerIdToAffinityMap;
     }
 
-    public void setAffinityMap(Map<Customer, Affinity> affinityMap) {
-        this.affinityMap = affinityMap;
+    public void setCustomerIdToAffinityMap(Map<Long, Affinity> customerIdToAffinityMap) {
+        this.customerIdToAffinityMap = customerIdToAffinityMap;
     }
 
     // ************************************************************************
@@ -69,6 +70,7 @@ public class Employee extends TaskOrEmployee {
     // ************************************************************************
 
     @Override
+    @JsonIgnore
     public Employee getEmployee() {
         return this;
     }
@@ -83,7 +85,7 @@ public class Employee extends TaskOrEmployee {
      * @return never null
      */
     public Affinity getAffinity(Customer customer) {
-        Affinity affinity = affinityMap.get(customer);
+        Affinity affinity = customerIdToAffinityMap.get(customer.getId());
         if (affinity == null) {
             affinity = Affinity.NONE;
         }

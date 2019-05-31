@@ -105,8 +105,9 @@ public class TaskAssigningGenerator {
     private final StringDataGenerator customerNameGenerator = StringDataGenerator.buildCompanyNames();
     private final StringDataGenerator employeeNameGenerator = StringDataGenerator.buildFullNames();
 
-    private Random random;
     private final long tenantId;
+    private Long newEntityId = 0L;
+    private Random random;
 
     public TaskAssigningGenerator(long tenantId) {
         this.tenantId = tenantId;
@@ -114,7 +115,7 @@ public class TaskAssigningGenerator {
 
     public TaskAssigningSolution createTaskAssigningSolution(int taskListSize, int employeeListSize) {
         int skillListSize = SKILL_SET_SIZE_MAXIMUM + (int) Math.log(employeeListSize);
-        int taskTypeListSize = taskListSize / 5;
+        int taskTypeListSize = taskListSize / 5 + 1;
         int customerListSize = Math.min(taskTypeListSize, employeeListSize * 3);
         return createTaskAssigningSolution(taskListSize, skillListSize, employeeListSize,
                 taskTypeListSize, customerListSize);
@@ -124,6 +125,7 @@ public class TaskAssigningGenerator {
                                                               int taskTypeListSize, int customerListSize) {
         random = new Random(37);
         TaskAssigningSolution solution = new TaskAssigningSolution();
+        solution.setId(newEntityId++);
         solution.setTenantId(tenantId);
 
         createSkillList(solution, skillListSize);
@@ -147,6 +149,7 @@ public class TaskAssigningGenerator {
         skillNameGenerator.predictMaximumSizeAndReset(skillListSize);
         for (int i = 0; i < skillListSize; i++) {
             Skill skill = new Skill();
+            skill.setId(newEntityId++);
             skill.setTenantId(tenantId);
             String skillName = skillNameGenerator.generateNextValue();
             skill.setName(skillName);
@@ -161,6 +164,7 @@ public class TaskAssigningGenerator {
         customerNameGenerator.predictMaximumSizeAndReset(customerListSize);
         for (int i = 0; i < customerListSize; i++) {
             Customer customer = new Customer();
+            customer.setId(newEntityId++);
             customer.setTenantId(tenantId);
             String customerName = customerNameGenerator.generateNextValue();
             customer.setName(customerName);
@@ -179,6 +183,7 @@ public class TaskAssigningGenerator {
         employeeNameGenerator.predictMaximumSizeAndReset(employeeListSize);
         for (int i = 0; i < employeeListSize; i++) {
             Employee employee = new Employee();
+            employee.setId(newEntityId++);
             employee.setTenantId(tenantId);
             String fullName = employeeNameGenerator.generateNextValue();
             employee.setFullName(fullName);
@@ -192,11 +197,11 @@ public class TaskAssigningGenerator {
                 skillListIndex = (skillListIndex + 1) % skillList.size();
             }
             employee.setSkillSet(skillSet);
-            Map<Customer, Affinity> affinityMap = new LinkedHashMap<>(customerList.size());
+            Map<Long, Affinity> affinityMap = new LinkedHashMap<>(customerList.size());
             for (Customer customer : customerList) {
-                affinityMap.put(customer, affinities[random.nextInt(affinities.length)]);
+                affinityMap.put(customer.getId(), affinities[random.nextInt(affinities.length)]);
             }
-            employee.setAffinityMap(affinityMap);
+            employee.setCustomerIdToAffinityMap(affinityMap);
             logger.trace("Created employee with fullName ({}).", fullName);
             employeeList.add(employee);
         }
@@ -210,6 +215,7 @@ public class TaskAssigningGenerator {
         taskTypeNameGenerator.predictMaximumSizeAndReset(taskTypeListSize);
         for (int i = 0; i < taskTypeListSize; i++) {
             TaskType taskType = new TaskType();
+            taskType.setId(newEntityId++);
             taskType.setTenantId(tenantId);
             String title = taskTypeNameGenerator.generateNextValue();
             taskType.setTitle(title);
@@ -257,6 +263,7 @@ public class TaskAssigningGenerator {
         Map<TaskType, Integer> maxIndexInTaskTypeMap = new LinkedHashMap<>(taskTypeList.size());
         for (int i = 0; i < taskListSize; i++) {
             Task task = new Task();
+            task.setId(newEntityId++);
             task.setTenantId(tenantId);
             TaskType taskType = taskTypeList.get(random.nextInt(taskTypeList.size()));
             task.setTaskType(taskType);
