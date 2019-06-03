@@ -18,6 +18,7 @@ package org.optaplanner.springboottaskassigning;
 
 import org.optaplanner.core.api.score.Score;
 import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution;
+import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolutionRepository;
 import org.optaplanner.springboottaskassigning.solver.SolverManager;
 import org.optaplanner.springboottaskassigning.solver.SolverStatus;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,28 +30,35 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("solvers")
+@RequestMapping("/tenants/{tenantId}/solver")
 public class TaskAssigningSolverManagerController {
 
     @Autowired
     private SolverManager<TaskAssigningSolution> solverManager;
 
-    @PostMapping("{tenantId}")
+    private final TaskAssigningSolutionRepository taskAssigningSolutionRepository;
+
+    public TaskAssigningSolverManagerController(TaskAssigningSolutionRepository taskAssigningSolutionRepository) {
+        this.taskAssigningSolutionRepository = taskAssigningSolutionRepository;
+    }
+
+    @PostMapping
     public void solve(@PathVariable Comparable<?> tenantId, @RequestBody TaskAssigningSolution planningProblem) {
+        taskAssigningSolutionRepository.save(planningProblem);
         solverManager.solve(tenantId, planningProblem);
     }
 
-    @GetMapping("{tenantId}/bestSolution")
+    @GetMapping("/bestSolution")
     public TaskAssigningSolution bestSolution(@PathVariable Comparable<?> tenantId) {
         return solverManager.getBestSolution(tenantId);
     }
 
-    @GetMapping("{tenantId}/bestScore")
+    @GetMapping("/bestScore")
     public Score bestScore(@PathVariable Comparable<?> tenantId) {
         return solverManager.getBestScore(tenantId);
     }
 
-    @GetMapping("{tenantId}/solverStatus")
+    @GetMapping("/status")
     public SolverStatus solverStatus(@PathVariable Comparable<?> tenantId) {
         return solverManager.getSolverStatus(tenantId);
     }

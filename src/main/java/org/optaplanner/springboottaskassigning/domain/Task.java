@@ -16,6 +16,9 @@
 
 package org.optaplanner.springboottaskassigning.domain;
 
+import javax.persistence.Entity;
+import javax.persistence.ManyToOne;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
 import org.optaplanner.core.api.domain.entity.PlanningPin;
@@ -28,10 +31,13 @@ import org.optaplanner.springboottaskassigning.domain.solver.StartAndEndTimeUpda
 import org.optaplanner.springboottaskassigning.domain.solver.TaskDifficultyComparator;
 
 @PlanningEntity(difficultyComparatorClass = TaskDifficultyComparator.class)
+@Entity
 public class Task extends TaskOrEmployee {
 
+    @ManyToOne
     private TaskType taskType;
     private int indexInTaskType;
+    @ManyToOne
     private Customer customer;
     private int readyTime;
     private Priority priority;
@@ -48,6 +54,7 @@ public class Task extends TaskOrEmployee {
     // Shadow variables
     // Task nextTask inherited from superclass
     @AnchorShadowVariable(sourceVariableName = "previousTaskOrEmployee")
+    @ManyToOne
     private Employee employee;
     @CustomShadowVariable(variableListenerClass = StartAndEndTimeUpdatingVariableListener.class,
             // Arguable, to adhere to API specs (although this works), nextTask and employee should also be a source,

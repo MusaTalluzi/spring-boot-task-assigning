@@ -16,6 +16,9 @@
 
 package org.optaplanner.springboottaskassigning.domain;
 
+import javax.persistence.Entity;
+
+@Entity
 public class Skill extends AbstractPersistable {
 
     private String name;
@@ -39,7 +42,6 @@ public class Skill extends AbstractPersistable {
     // ************************************************************************
     // Complex methods
     // ************************************************************************
-
 
     public String getLabel() {
         return name;

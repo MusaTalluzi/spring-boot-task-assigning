@@ -21,14 +21,31 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.MapKeyColumn;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+@Entity
 public class Employee extends TaskOrEmployee {
 
     private String fullName;
 
+    @ManyToMany
+    @JoinTable(
+            joinColumns = @JoinColumn(name = "employee_id"),
+            inverseJoinColumns = @JoinColumn(name = "skill_id")
+    )
     private Set<Skill> skillSet;
 
+    @ElementCollection
+    @MapKeyColumn(name = "customer_id")
+    @Column(name = "affinity")
     private Map<Long, Affinity> customerIdToAffinityMap;
 
     public Employee() {

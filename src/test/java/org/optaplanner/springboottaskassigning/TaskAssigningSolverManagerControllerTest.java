@@ -141,27 +141,7 @@ public class TaskAssigningSolverManagerControllerTest {
         String planningProblemAsJsonString = objectMapper.writeValueAsString(planningProblem);
         Long tenantId = planningProblem.getTenantId();
 
-        /* Only for testing persistence */
-
-//        URL url = new URL("http://localhost:8080/solvers/" + tenantId);
-//        URLConnection con = url.openConnection();
-//        HttpURLConnection httpURLConnection = (HttpURLConnection) con;
-//        httpURLConnection.setRequestMethod("POST");
-//        httpURLConnection.setDoOutput(true);
-//
-//        byte[] out = planningProblemAsJsonString.getBytes(StandardCharsets.UTF_8);
-//
-//        httpURLConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-//        httpURLConnection.setFixedLengthStreamingMode(out.length);
-//        httpURLConnection.connect();
-//        try (OutputStream os = httpURLConnection.getOutputStream()) {
-//            os.write(out);
-//        }
-//        httpURLConnection.disconnect();
-
-        /* End of testing persistence */
-
-        mockMvc.perform(post("/solvers/{tenantId}", tenantId)
+        mockMvc.perform(post("/tenants/{tenantId}/solver", tenantId)
                 .content(planningProblemAsJsonString)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
@@ -169,16 +149,16 @@ public class TaskAssigningSolverManagerControllerTest {
 
         Thread.sleep(1000L); // Give solver thread time to start
 
-        // FIXME: when number of solvers is more than available processors, 1s isn't enough for all solvers to start
+        // FIXME: when number of solvers is more than available processors, 1 second isn't enough for all solvers to start
         String solvingStatusJsonString = objectMapper.writeValueAsString(SolverStatus.SOLVING);
-        mockMvc.perform(get("/solvers/{tenantId}/solverStatus", tenantId)
+        mockMvc.perform(get("/tenants/{tenantId}/solver/status", tenantId)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 //                .andExpect(content().string(solvingStatusJsonString));
 
         Thread.sleep(2000L); // Give solver time to solve
 
-        String solutionAsJsonString = mockMvc.perform(get("/solvers/{tenantId}/bestSolution", tenantId)
+        String solutionAsJsonString = mockMvc.perform(get("/tenants/{tenantId}/solver/bestSolution", tenantId)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn()
@@ -188,7 +168,7 @@ public class TaskAssigningSolverManagerControllerTest {
 
         // FIXME the score might change between the two REST request invocations
         // FIXME Fix: after adding persistence, compare score of solution with score stored
-        String bestScoreAsString = mockMvc.perform(get("/solvers/{tenantId}/bestScore", tenantId)
+        String bestScoreAsString = mockMvc.perform(get("/tenants/{tenantId}/solver/bestScore", tenantId)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn()
