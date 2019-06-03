@@ -21,6 +21,8 @@ import org.junit.runner.RunWith;
 import org.optaplanner.core.api.score.Score;
 import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution;
 import org.optaplanner.springboottaskassigning.utils.TaskAssigningGenerator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -31,6 +33,8 @@ import static org.junit.Assert.*;
 @SpringBootTest
 public class DefaultSolverManagerTest {
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     @Autowired
     private SolverManager<TaskAssigningSolution> solverManager;
 
@@ -40,7 +44,9 @@ public class DefaultSolverManagerTest {
         TaskAssigningSolution problem =
                 new TaskAssigningGenerator(tenantId).createTaskAssigningSolution(24, 4);
 
-        solverManager.solve(tenantId, problem);
+        solverManager.solve(tenantId, problem,
+                taskAssigningSolution -> logger.info("Best solution changed."),
+                taskAssigningSolution -> logger.info("Solving ended"));
         Thread.sleep(1000L); // Give time to start solving
 
         assertEquals(solverManager.getSolverStatus(tenantId), SolverStatus.SOLVING);

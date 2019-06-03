@@ -16,8 +16,11 @@
 
 package org.optaplanner.springboottaskassigning.solver;
 
+import java.util.function.Consumer;
+
 import org.optaplanner.core.api.score.Score;
 import org.optaplanner.core.api.solver.Solver;
+import org.optaplanner.core.api.solver.event.SolverEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,17 +31,21 @@ public class SolverTask<Solution_> implements Runnable {
     private final Comparable<?> tenantId;
     private Solver<Solution_> solver;
     private Solution_ planningProblem;
+    private Consumer<Solution_> onSolvingEnded;
 
-    public SolverTask(Comparable<?> tenantId, Solver<Solution_> solver, Solution_ planningProblem) {
+    public SolverTask(Comparable<?> tenantId, Solver<Solution_> solver, Solution_ planningProblem,
+                      Consumer<Solution_> onSolvingEnded) {
         this.tenantId = tenantId;
         this.solver = solver;
         this.planningProblem = planningProblem;
+        this.onSolvingEnded = onSolvingEnded;
     }
 
     @Override
     public void run() {
         logger.info("Running solverTask for tenantId ({}).", tenantId);
         solver.solve(planningProblem);
+        onSolvingEnded.accept(solver.getBestSolution());
         logger.info("Done");
     }
 
@@ -62,6 +69,10 @@ public class SolverTask<Solution_> implements Runnable {
         } else {
             return SolverStatus.STOPPED;
         }
+    }
+
+    public void addEventListener(SolverEventListener<Solution_> eventListener) {
+        solver.addEventListener(eventListener);
     }
 }
 
