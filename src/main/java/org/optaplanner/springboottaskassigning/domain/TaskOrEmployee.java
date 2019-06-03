@@ -16,20 +16,26 @@
 
 package org.optaplanner.springboottaskassigning.domain;
 
-import javax.persistence.MappedSuperclass;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.OneToOne;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
 import org.optaplanner.core.api.domain.variable.InverseRelationShadowVariable;
 
 @PlanningEntity
-@MappedSuperclass
+@Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public abstract class TaskOrEmployee extends AbstractPersistable {
 
     // Shadow variables
     @InverseRelationShadowVariable(sourceVariableName = "previousTaskOrEmployee")
     // Ignore this in the json result to keep Tasks details in taskList only
     @JsonIgnore
+    @OneToOne(cascade = CascadeType.ALL)
     protected Task nextTask;
 
     public TaskOrEmployee() {

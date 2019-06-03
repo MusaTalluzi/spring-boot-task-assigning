@@ -16,12 +16,15 @@
 
 package org.optaplanner.springboottaskassigning.solver;
 
+import java.util.function.Consumer;
+
 import org.optaplanner.core.api.score.Score;
 
 public interface SolverManager<Solution_> {
 
     // TODO iterate over planning solution entities and set tenantId, or induce it from solution.getTenantId()
-    void solve(Comparable<?> tenantId, Solution_ planningSolution);
+    void solve(Comparable<?> tenantId, Solution_ planningSolution,
+               Consumer<Solution_> onBestSolutionChangedEvent, Consumer<Solution_> onSolvingEnded);
 
     Solution_ getBestSolution(Comparable<?> tenantId);
 

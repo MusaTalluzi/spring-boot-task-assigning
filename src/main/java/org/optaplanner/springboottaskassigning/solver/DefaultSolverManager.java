@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -62,12 +63,16 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     }
 
     @Override
-    public void solve(Comparable<?> tenantId, Solution_ planningProblem) {
+    public void solve(Comparable<?> tenantId, Solution_ planningProblem,
+                      Consumer<Solution_> onBestSolutionChangedEvent, Consumer<Solution_> onSolvingEnded) {
         synchronized (this) {
             if (tenantIdToSolverTaskMap.containsKey(tenantId)) {
                 throw new IllegalArgumentException("Tenant id (" + tenantId + ") already exists.");
             }
-            SolverTask<Solution_> newSolverTask = new SolverTask<>(tenantId, solverFactory.buildSolver(), planningProblem);
+            SolverTask<Solution_> newSolverTask = new SolverTask<>(tenantId, solverFactory.buildSolver(), planningProblem,
+                    onSolvingEnded);
+            // TODO implement throttling
+            newSolverTask.addEventListener(bestSolutionChangedEvent -> onBestSolutionChangedEvent.accept(bestSolutionChangedEvent.getNewBestSolution()));
             executorService.submit(newSolverTask);
             tenantIdToSolverTaskMap.put(tenantId, newSolverTask);
             logger.info("A new solver task was created with tenantId ({}).", tenantId);
@@ -75,7 +80,7 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     }
 
     //TODO handle error when tenantId does not exist
-    
+
     @Override
     public Solution_ getBestSolution(Comparable<?> tenantId) {
         logger.debug("Getting best solution of tenantId ({}).", tenantId);

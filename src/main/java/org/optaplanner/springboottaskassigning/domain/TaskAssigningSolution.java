@@ -22,7 +22,9 @@ import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.Transient;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.optaplanner.core.api.domain.solution.PlanningEntityCollectionProperty;
 import org.optaplanner.core.api.domain.solution.PlanningScore;
@@ -64,6 +66,8 @@ public class TaskAssigningSolution extends AbstractPersistable {
     private List<Task> taskList;
 
     @PlanningScore(bendableHardLevelsSize = 1, bendableSoftLevelsSize = 4)
+    @Transient
+    @JsonInclude
     private BendableScore score;
 
     /**

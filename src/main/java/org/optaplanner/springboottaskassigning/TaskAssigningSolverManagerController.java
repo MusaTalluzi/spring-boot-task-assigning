@@ -16,11 +16,15 @@
 
 package org.optaplanner.springboottaskassigning;
 
+import java.util.function.Consumer;
+
 import org.optaplanner.core.api.score.Score;
 import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution;
 import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolutionRepository;
 import org.optaplanner.springboottaskassigning.solver.SolverManager;
 import org.optaplanner.springboottaskassigning.solver.SolverStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,19 +37,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/tenants/{tenantId}/solver")
 public class TaskAssigningSolverManagerController {
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final TaskAssigningSolutionRepository taskAssigningSolutionRepository;
+    private final Consumer<TaskAssigningSolution> onBestSolutionChangedEvent;
+    private final Consumer<TaskAssigningSolution> onSolvingEnded;
+
     @Autowired
     private SolverManager<TaskAssigningSolution> solverManager;
 
-    private final TaskAssigningSolutionRepository taskAssigningSolutionRepository;
-
     public TaskAssigningSolverManagerController(TaskAssigningSolutionRepository taskAssigningSolutionRepository) {
         this.taskAssigningSolutionRepository = taskAssigningSolutionRepository;
+        onBestSolutionChangedEvent = taskAssigningSolutionRepository::save;
+        onSolvingEnded = taskAssigningSolutionRepository::save;
     }
 
     @PostMapping
     public void solve(@PathVariable Comparable<?> tenantId, @RequestBody TaskAssigningSolution planningProblem) {
         taskAssigningSolutionRepository.save(planningProblem);
-        solverManager.solve(tenantId, planningProblem);
+        solverManager.solve(tenantId, planningProblem, onBestSolutionChangedEvent, onSolvingEnded);
     }
 
     @GetMapping("/bestSolution")
