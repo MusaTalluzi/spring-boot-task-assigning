@@ -16,11 +16,14 @@
 
 package org.optaplanner.springboottaskassigning.domain;
 
+import javax.persistence.MappedSuperclass;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
 import org.optaplanner.core.api.domain.variable.InverseRelationShadowVariable;
 
 @PlanningEntity
+@MappedSuperclass
 public abstract class TaskOrEmployee extends AbstractPersistable {
 
     // Shadow variables

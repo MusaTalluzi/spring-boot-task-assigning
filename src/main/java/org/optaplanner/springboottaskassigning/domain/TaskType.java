@@ -19,12 +19,19 @@ package org.optaplanner.springboottaskassigning.domain;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.ManyToMany;
+
+@Entity
 public class TaskType extends AbstractPersistable {
 
     private String code;
     private String title;
     private int baseDuration; // In minutes
 
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private List<Skill> requiredSkillList;
 
     public TaskType() {

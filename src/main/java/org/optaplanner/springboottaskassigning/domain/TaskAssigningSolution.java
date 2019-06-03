@@ -18,6 +18,11 @@ package org.optaplanner.springboottaskassigning.domain;
 
 import java.util.List;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
+
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.optaplanner.core.api.domain.solution.PlanningEntityCollectionProperty;
 import org.optaplanner.core.api.domain.solution.PlanningScore;
@@ -28,20 +33,34 @@ import org.optaplanner.core.api.score.buildin.bendable.BendableScore;
 
 @PlanningSolution
 @JsonPropertyOrder({"skillList", "taskTypeList", "customerList", "employeeList", "taskList", "score", "frozenCutoff"})
+@Entity
 public class TaskAssigningSolution extends AbstractPersistable {
 
     @ProblemFactCollectionProperty
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "cloud_balance_id")
     private List<Skill> skillList;
+
     @ProblemFactCollectionProperty
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "cloud_balance_id")
     private List<TaskType> taskTypeList;
+
     @ProblemFactCollectionProperty
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "cloud_balance_id")
     private List<Customer> customerList;
+
     @ValueRangeProvider(id = "employeeRange")
     @ProblemFactCollectionProperty
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "cloud_balance_id")
     private List<Employee> employeeList;
 
     @PlanningEntityCollectionProperty
     @ValueRangeProvider(id = "taskRange")
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "cloud_balance_id")
     private List<Task> taskList;
 
     @PlanningScore(bendableHardLevelsSize = 1, bendableSoftLevelsSize = 4)
