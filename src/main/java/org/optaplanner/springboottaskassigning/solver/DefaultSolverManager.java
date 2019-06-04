@@ -47,10 +47,6 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     public DefaultSolverManager() {
         solverFactory = SolverFactory.createFromXmlResource(SOLVER_CONFIG, DefaultSolverManager.class.getClassLoader());
         tenantIdToSolverTaskMap = new HashMap<>();
-    }
-
-    @PostConstruct
-    private void init() {
         int numAvailableProcessors = Runtime.getRuntime().availableProcessors();
         logger.info("Number of available processors: {}.", numAvailableProcessors);
         executorService = Executors.newFixedThreadPool(numAvailableProcessors - 2);
