@@ -47,13 +47,29 @@ public class TaskAssigningSolverManagerController {
 
     public TaskAssigningSolverManagerController(TaskAssigningSolutionRepository taskAssigningSolutionRepository) {
         this.taskAssigningSolutionRepository = taskAssigningSolutionRepository;
-        onBestSolutionChangedEvent = taskAssigningSolutionRepository::save;
-        onSolvingEnded = taskAssigningSolutionRepository::save;
+        onBestSolutionChangedEvent = taskAssigningSolution -> {
+            logger.debug("Best solution changed");
+            try {
+                taskAssigningSolutionRepository.save(taskAssigningSolution);
+            } catch (Exception e) {
+                e.printStackTrace();
+                // FIXME the exception is eaten and not propagated properly, duplicate by using older version of optaplanner-persistence-jpa
+                throw new RuntimeException(e);
+            }
+        };
+        onSolvingEnded = taskAssigningSolution -> {
+            logger.debug("Solving ended");
+            try {
+                taskAssigningSolutionRepository.save(taskAssigningSolution);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
+        };
     }
 
     @PostMapping
     public void solve(@PathVariable Comparable<?> tenantId, @RequestBody TaskAssigningSolution planningProblem) {
-        taskAssigningSolutionRepository.save(planningProblem);
         solverManager.solve(tenantId, planningProblem, onBestSolutionChangedEvent, onSolvingEnded);
     }
 

@@ -64,10 +64,16 @@
 		<dependency>
 			<groupId>org.optaplanner</groupId>
 			<artifactId>optaplanner-persistence-jpa</artifactId>
+			<version>7.24.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.optaplanner</groupId>
 			<artifactId>optaplanner-test</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.drools</groupId>
+			<artifactId>drools-core</artifactId>
+			<version>7.24.0-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 

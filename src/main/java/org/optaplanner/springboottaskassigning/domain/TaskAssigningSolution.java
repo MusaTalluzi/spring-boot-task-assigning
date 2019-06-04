@@ -19,23 +19,30 @@ package org.optaplanner.springboottaskassigning.domain;
 import java.util.List;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
-import javax.persistence.Transient;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import org.hibernate.annotations.Columns;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.TypeDef;
 import org.optaplanner.core.api.domain.solution.PlanningEntityCollectionProperty;
 import org.optaplanner.core.api.domain.solution.PlanningScore;
 import org.optaplanner.core.api.domain.solution.PlanningSolution;
 import org.optaplanner.core.api.domain.solution.drools.ProblemFactCollectionProperty;
 import org.optaplanner.core.api.domain.valuerange.ValueRangeProvider;
 import org.optaplanner.core.api.score.buildin.bendable.BendableScore;
+import org.optaplanner.persistence.jpa.impl.score.buildin.bendable.BendableScoreHibernateType;
 
 @PlanningSolution
 @JsonPropertyOrder({"skillList", "taskTypeList", "customerList", "employeeList", "taskList", "score", "frozenCutoff"})
 @Entity
+@TypeDef(defaultForType = BendableScore.class, typeClass = BendableScoreHibernateType.class, parameters = {
+        @Parameter(name = "hardLevelsSize", value = "1"),
+        @Parameter(name = "softLevelsSize", value = "4")
+})
 public class TaskAssigningSolution extends AbstractPersistable {
 
     @ProblemFactCollectionProperty
@@ -66,8 +73,14 @@ public class TaskAssigningSolution extends AbstractPersistable {
     private List<Task> taskList;
 
     @PlanningScore(bendableHardLevelsSize = 1, bendableSoftLevelsSize = 4)
-    @Transient
-    @JsonInclude
+    @Columns(columns = {
+            @Column(name = "initScore"),
+            @Column(name = "hardScore"),
+            @Column(name = "soft0Score"),
+            @Column(name = "soft1Score"),
+            @Column(name = "soft2Score"),
+            @Column(name = "soft3Score")
+    })
     private BendableScore score;
 
     /**
