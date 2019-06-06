@@ -30,6 +30,8 @@ import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyColumn;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 
 @Entity
 public class Employee extends TaskOrEmployee {
@@ -41,11 +43,13 @@ public class Employee extends TaskOrEmployee {
             joinColumns = @JoinColumn(name = "employee_id"),
             inverseJoinColumns = @JoinColumn(name = "skill_id")
     )
+    @LazyCollection(LazyCollectionOption.FALSE)
     private Set<Skill> skillSet;
 
     @ElementCollection
     @MapKeyColumn(name = "customer_id")
     @Column(name = "affinity")
+    @LazyCollection(LazyCollectionOption.FALSE)
     private Map<Long, Affinity> customerIdToAffinityMap;
 
     public Employee() {

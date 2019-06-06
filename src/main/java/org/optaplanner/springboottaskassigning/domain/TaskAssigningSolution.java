@@ -26,6 +26,8 @@ import javax.persistence.OneToMany;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.hibernate.annotations.Columns;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.TypeDef;
 import org.optaplanner.core.api.domain.solution.PlanningEntityCollectionProperty;
@@ -48,28 +50,33 @@ public class TaskAssigningSolution extends AbstractPersistable {
     @ProblemFactCollectionProperty
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "cloud_balance_id")
+    @LazyCollection(LazyCollectionOption.FALSE)
     private List<Skill> skillList;
 
     @ProblemFactCollectionProperty
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "cloud_balance_id")
+    @LazyCollection(LazyCollectionOption.FALSE)
     private List<TaskType> taskTypeList;
 
     @ProblemFactCollectionProperty
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "cloud_balance_id")
+    @LazyCollection(LazyCollectionOption.FALSE)
     private List<Customer> customerList;
 
     @ValueRangeProvider(id = "employeeRange")
     @ProblemFactCollectionProperty
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "cloud_balance_id")
+    @LazyCollection(LazyCollectionOption.FALSE)
     private List<Employee> employeeList;
 
     @PlanningEntityCollectionProperty
     @ValueRangeProvider(id = "taskRange")
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "cloud_balance_id")
+    @LazyCollection(LazyCollectionOption.FALSE)
     private List<Task> taskList;
 
     @PlanningScore(bendableHardLevelsSize = 1, bendableSoftLevelsSize = 4)
