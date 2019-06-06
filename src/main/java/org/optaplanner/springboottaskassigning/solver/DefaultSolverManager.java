@@ -22,7 +22,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
 import org.optaplanner.core.api.score.Score;
@@ -76,7 +75,6 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     }
 
     //TODO handle error when tenantId does not exist
-
     @Override
     public Solution_ getBestSolution(Comparable<?> tenantId) {
         logger.debug("Getting best solution of tenantId ({}).", tenantId);

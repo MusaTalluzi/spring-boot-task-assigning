@@ -16,15 +16,9 @@
 
 package org.optaplanner.springboottaskassigning;
 
-import java.util.function.Consumer;
-
 import org.optaplanner.core.api.score.Score;
 import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution;
-import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolutionRepository;
-import org.optaplanner.springboottaskassigning.solver.SolverManager;
 import org.optaplanner.springboottaskassigning.solver.SolverStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,54 +31,26 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/tenants/{tenantId}/solver")
 public class TaskAssigningSolverManagerController {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final TaskAssigningSolutionRepository taskAssigningSolutionRepository;
-    private final Consumer<TaskAssigningSolution> onBestSolutionChangedEvent;
-    private final Consumer<TaskAssigningSolution> onSolvingEnded;
-
     @Autowired
-    private SolverManager<TaskAssigningSolution> solverManager;
-
-    public TaskAssigningSolverManagerController(TaskAssigningSolutionRepository taskAssigningSolutionRepository) {
-        this.taskAssigningSolutionRepository = taskAssigningSolutionRepository;
-        onBestSolutionChangedEvent = taskAssigningSolution -> {
-            logger.debug("Best solution changed");
-            try {
-                taskAssigningSolutionRepository.save(taskAssigningSolution);
-            } catch (Exception e) {
-                e.printStackTrace();
-                // FIXME the exception is eaten and not propagated properly, duplicate by using older version of optaplanner-persistence-jpa
-                throw new RuntimeException(e);
-            }
-        };
-        onSolvingEnded = taskAssigningSolution -> {
-            logger.debug("Solving ended");
-            try {
-                taskAssigningSolutionRepository.save(taskAssigningSolution);
-            } catch (Exception e) {
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
-        };
-    }
+    private TaskAssigningSolverManagerService solverManagerService;
 
     @PostMapping
-    public void solve(@PathVariable Comparable<?> tenantId, @RequestBody TaskAssigningSolution planningProblem) {
-        solverManager.solve(tenantId, planningProblem, onBestSolutionChangedEvent, onSolvingEnded);
+    public void solve(@PathVariable Long tenantId, @RequestBody TaskAssigningSolution planningProblem) {
+        solverManagerService.solve(tenantId, planningProblem);
     }
 
     @GetMapping("/bestSolution")
-    public TaskAssigningSolution bestSolution(@PathVariable Comparable<?> tenantId) {
-        return solverManager.getBestSolution(tenantId);
+    public TaskAssigningSolution bestSolution(@PathVariable Long tenantId) {
+        return solverManagerService.bestSolution(tenantId);
     }
 
     @GetMapping("/bestScore")
-    public Score bestScore(@PathVariable Comparable<?> tenantId) {
-        return solverManager.getBestScore(tenantId);
+    public Score bestScore(@PathVariable Long tenantId) {
+        return solverManagerService.bestScore(tenantId);
     }
 
     @GetMapping("/status")
-    public SolverStatus solverStatus(@PathVariable Comparable<?> tenantId) {
-        return solverManager.getSolverStatus(tenantId);
+    public SolverStatus solverStatus(@PathVariable Long tenantId) {
+        return solverManagerService.solverStatus(tenantId);
     }
 }
