@@ -23,7 +23,7 @@
 			<dependency>
 				<groupId>org.optaplanner</groupId>
 				<artifactId>optaplanner-bom</artifactId>
-				<version>7.20.0.Final</version>
+				<version>7.24.0-SNAPSHOT</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -54,26 +54,14 @@
 		<dependency>
 			<groupId>org.optaplanner</groupId>
 			<artifactId>optaplanner-core</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>org.drools</groupId>
-					<artifactId>drools-core</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.optaplanner</groupId>
 			<artifactId>optaplanner-persistence-jpa</artifactId>
-			<version>7.24.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.optaplanner</groupId>
 			<artifactId>optaplanner-test</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.drools</groupId>
-			<artifactId>drools-core</artifactId>
-			<version>7.24.0-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>

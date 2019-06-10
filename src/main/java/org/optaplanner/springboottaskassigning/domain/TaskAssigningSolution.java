@@ -49,33 +49,33 @@ public class TaskAssigningSolution extends AbstractPersistable {
 
     @ProblemFactCollectionProperty
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "cloud_balance_id")
+    @JoinColumn(name = "task_assigning_solution_id")
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Skill> skillList;
 
     @ProblemFactCollectionProperty
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "cloud_balance_id")
+    @JoinColumn(name = "task_assigning_solution_id")
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<TaskType> taskTypeList;
 
     @ProblemFactCollectionProperty
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "cloud_balance_id")
+    @JoinColumn(name = "task_assigning_solution_id")
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Customer> customerList;
 
     @ValueRangeProvider(id = "employeeRange")
     @ProblemFactCollectionProperty
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "cloud_balance_id")
+    @JoinColumn(name = "task_assigning_solution_id")
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Employee> employeeList;
 
     @PlanningEntityCollectionProperty
     @ValueRangeProvider(id = "taskRange")
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "cloud_balance_id")
+    @JoinColumn(name = "task_assigning_solution_id")
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Task> taskList;
 
