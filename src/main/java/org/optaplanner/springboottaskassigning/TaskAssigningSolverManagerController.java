@@ -40,22 +40,25 @@ public class TaskAssigningSolverManagerController {
 
     @PostMapping
     public void solve(@PathVariable Long tenantId, @RequestBody TaskAssigningSolution planningProblem) {
-        logger.info("GET ");
+        logger.info("POST /tenants/{}/solver", tenantId);
         solverManagerService.solve(tenantId, planningProblem);
     }
 
     @GetMapping("/bestSolution")
     public TaskAssigningSolution bestSolution(@PathVariable Long tenantId) {
+        logger.info("GET /tenants/{}/solver/bestSolution", tenantId);
         return solverManagerService.bestSolution(tenantId);
     }
 
     @GetMapping("/bestScore")
     public Score bestScore(@PathVariable Long tenantId) {
+        logger.info("GET /tenants/{}/solver/bestScore", tenantId);
         return solverManagerService.bestScore(tenantId);
     }
 
     @GetMapping("/status")
     public SolverStatus solverStatus(@PathVariable Long tenantId) {
+        logger.info("GET /tenants/{}/solver/status", tenantId);
         return solverManagerService.solverStatus(tenantId);
     }
 }
