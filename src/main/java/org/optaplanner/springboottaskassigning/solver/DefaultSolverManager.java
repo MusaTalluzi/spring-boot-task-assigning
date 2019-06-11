@@ -20,17 +20,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-
-import javax.annotation.PreDestroy;
 
 import org.optaplanner.core.api.score.Score;
 import org.optaplanner.core.api.solver.SolverFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
-@Service
 public class DefaultSolverManager<Solution_> implements SolverManager<Solution_> {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultSolverManager.class);
@@ -51,12 +48,6 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
         executorService = Executors.newFixedThreadPool(numAvailableProcessors - 2);
     }
 
-    @PreDestroy
-    private void shutdown() {
-        logger.info("Shutting down {}.", DefaultSolverManager.class.getName());
-        executorService.shutdownNow();
-    }
-
     @Override
     public void solve(Comparable<?> tenantId, Solution_ planningProblem,
                       Consumer<Solution_> onBestSolutionChangedEvent, Consumer<Solution_> onSolvingEnded) {
@@ -67,29 +58,56 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
             SolverTask<Solution_> newSolverTask = new SolverTask<>(tenantId, solverFactory.buildSolver(), planningProblem,
                     onSolvingEnded);
             // TODO implement throttling
-            newSolverTask.addEventListener(bestSolutionChangedEvent -> onBestSolutionChangedEvent.accept(bestSolutionChangedEvent.getNewBestSolution()));
+            if (onBestSolutionChangedEvent != null) {
+                newSolverTask.addEventListener(bestSolutionChangedEvent -> onBestSolutionChangedEvent.accept(bestSolutionChangedEvent.getNewBestSolution()));
+            }
             executorService.submit(newSolverTask);
             tenantIdToSolverTaskMap.put(tenantId, newSolverTask);
             logger.info("A new solver task was created with tenantId ({}).", tenantId);
         }
     }
 
-    //TODO handle error when tenantId does not exist
     @Override
     public Solution_ getBestSolution(Comparable<?> tenantId) {
         logger.debug("Getting best solution of tenantId ({}).", tenantId);
-        return tenantIdToSolverTaskMap.get(tenantId).getBestSolution();
+        SolverTask<Solution_> solverTask = tenantIdToSolverTaskMap.get(tenantId);
+        if (solverTask == null) {
+            logger.error("Tenant ({}) does not have a solver task submitted.", tenantId);
+            return null;
+        }
+        return solverTask.getBestSolution();
     }
 
     @Override
     public Score getBestScore(Comparable<?> tenantId) {
         logger.debug("Getting best score of tenantId ({}).", tenantId);
-        return tenantIdToSolverTaskMap.get(tenantId).getBestScore();
+        SolverTask<Solution_> solverTask = tenantIdToSolverTaskMap.get(tenantId);
+        if (solverTask == null) {
+            logger.error("Tenant ({}) does not have a solver task submitted.", tenantId);
+            return null;
+        }
+        return solverTask.getBestScore();
     }
 
     @Override
     public SolverStatus getSolverStatus(Comparable<?> tenantId) {
         logger.debug("Getting solver status of tenantId ({}).", tenantId);
-        return tenantIdToSolverTaskMap.get(tenantId).getSolverStatus();
+        SolverTask<Solution_> solverTask = tenantIdToSolverTaskMap.get(tenantId);
+        if (solverTask == null) {
+            logger.error("Tenant ({}) does not have a solver task submitted.", tenantId);
+            return null;
+        }
+        return solverTask.getSolverStatus();
+    }
+
+    @Override
+    public void shutdown() throws InterruptedException {
+        logger.info("Shutting down {}.", DefaultSolverManager.class.getName());
+        executorService.shutdown();
+        Long awaitingDuration = 1L;
+        if (!executorService.awaitTermination(awaitingDuration, TimeUnit.SECONDS)) {
+            logger.info("Still waiting shutdown after {} second, calling shutdownNow().", awaitingDuration);
+            executorService.shutdownNow();
+        }
     }
 }

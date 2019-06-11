@@ -43,10 +43,19 @@ public class SolverTask<Solution_> implements Runnable {
 
     @Override
     public void run() {
-        logger.info("Running solverTask for tenantId ({}).", tenantId);
-        solver.solve(planningProblem);
-        onSolvingEnded.accept(solver.getBestSolution());
-        logger.info("Done");
+        try {
+            logger.info("Running solverTask for tenantId ({}).", tenantId);
+            solver.solve(planningProblem);
+            if (onSolvingEnded != null) {
+                onSolvingEnded.accept(solver.getBestSolution());
+            }
+            logger.info("Done");
+        } catch (Exception e) {
+            // TODO: better handling of exception (using Callable? / ExtendedExecuter with afterExecute() method)
+            // TODO propagate exception to SolverManager so it restarts solving for this tenant
+            e.printStackTrace();
+            Thread.currentThread().interrupt();
+        }
     }
 
     public Comparable<?> getTenantId() {
@@ -75,4 +84,3 @@ public class SolverTask<Solution_> implements Runnable {
         solver.addEventListener(eventListener);
     }
 }
-

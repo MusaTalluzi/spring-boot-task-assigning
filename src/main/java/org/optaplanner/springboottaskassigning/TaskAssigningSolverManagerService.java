@@ -19,15 +19,15 @@ package org.optaplanner.springboottaskassigning;
 import java.util.function.Consumer;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 
 import org.optaplanner.core.api.score.Score;
 import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution;
-import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolutionRepository;
+import org.optaplanner.springboottaskassigning.solver.DefaultSolverManager;
 import org.optaplanner.springboottaskassigning.solver.SolverManager;
 import org.optaplanner.springboottaskassigning.solver.SolverStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -39,7 +39,6 @@ public class TaskAssigningSolverManagerService {
     private final Consumer<TaskAssigningSolution> onBestSolutionChangedEvent;
     private final Consumer<TaskAssigningSolution> onSolvingEnded;
 
-    @Autowired
     private SolverManager<TaskAssigningSolution> solverManager;
 
     public TaskAssigningSolverManagerService(TaskAssigningSolutionRepository taskAssigningSolutionRepository) {
@@ -58,6 +57,8 @@ public class TaskAssigningSolverManagerService {
             logger.debug("Solving ended.");
             try {
                 // FIXME org.hibernate.StaleObjectStateException: Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)
+                // cause: when saving after bestSolutionChangedEvent, persisted solution version is different than in memory solution version
+                // which is saved again here.
                 taskAssigningSolutionRepository.save(taskAssigningSolution);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -67,9 +68,15 @@ public class TaskAssigningSolverManagerService {
     }
 
     @PostConstruct
-    public void loadProblemsAndStartSolving() {
+    public void loadExistingProblemsAndStartSolving() {
+        solverManager = new DefaultSolverManager<>();
         taskAssigningSolutionRepository.findAll()
                 .forEach(taskAssigningSolution -> solve(taskAssigningSolution.getTenantId(), taskAssigningSolution));
+    }
+
+    @PreDestroy
+    public void tearDown() throws InterruptedException {
+        solverManager.shutdown();
     }
 
     public void solve(Long tenantId, TaskAssigningSolution planningProblem) {
