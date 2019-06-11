@@ -31,4 +31,6 @@ public interface SolverManager<Solution_> {
     Score getBestScore(Comparable<?> tenantId);
 
     SolverStatus getSolverStatus(Comparable<?> tenantId);
+
+    void shutdown() throws InterruptedException;
 }

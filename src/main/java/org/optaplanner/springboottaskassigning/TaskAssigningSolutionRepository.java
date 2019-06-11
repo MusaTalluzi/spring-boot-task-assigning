@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package org.optaplanner.springboottaskassigning.domain;
+package org.optaplanner.springboottaskassigning;
 
+import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TaskAssigningSolutionRepository extends JpaRepository<TaskAssigningSolution, Long> {

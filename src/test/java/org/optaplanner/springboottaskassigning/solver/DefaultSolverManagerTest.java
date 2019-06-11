@@ -16,47 +16,68 @@
 
 package org.optaplanner.springboottaskassigning.solver;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.optaplanner.core.api.score.Score;
 import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution;
 import org.optaplanner.springboottaskassigning.utils.TaskAssigningGenerator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
 public class DefaultSolverManagerTest {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    @Autowired
     private SolverManager<TaskAssigningSolution> solverManager;
+    private Long tenantId;
+    private CountDownLatch solutionChangedLatch;
+    private CountDownLatch solvingEndedLatch;
+
+    @Before
+    public void setup() {
+        solverManager = new DefaultSolverManager<>();
+        tenantId = 0L;
+        solutionChangedLatch = new CountDownLatch(1);
+        solvingEndedLatch = new CountDownLatch(1);
+    }
+
+    @After
+    public void tearDown() throws InterruptedException {
+        solverManager.shutdown();
+    }
 
     @Test
     public void basicUsageOfSolverManagerWithOneProblem() throws InterruptedException {
-        Long tenantId = 1L;
         TaskAssigningSolution problem =
                 new TaskAssigningGenerator(tenantId).createTaskAssigningSolution(24, 4);
 
         solverManager.solve(tenantId, problem,
-                taskAssigningSolution -> logger.info("Best solution changed."),
-                taskAssigningSolution -> logger.info("Solving ended"));
-        Thread.sleep(1000L); // Give time to start solving
+                taskAssigningSolution -> solutionChangedLatch.countDown(),
+                taskAssigningSolution -> solvingEndedLatch.countDown());
+        solutionChangedLatch.await(60, TimeUnit.SECONDS);
 
         assertEquals(solverManager.getSolverStatus(tenantId), SolverStatus.SOLVING);
 
         TaskAssigningSolution solution = solverManager.getBestSolution(tenantId);
         assertEquals(solution.getTenantId(), tenantId);
 
-        // FIXME this always returns null
         Score score = solverManager.getBestScore(tenantId);
-//        assertTrue(score.isSolutionInitialized());
+        assertTrue(score.isSolutionInitialized());
+    }
 
+    @Test
+    public void onBestSolutionChangeAndOnSolutionEnded() throws InterruptedException {
+        TaskAssigningSolution problem =
+                new TaskAssigningGenerator(tenantId).createTaskAssigningSolution(1, 1);
+        solverManager.solve(tenantId, problem,
+                taskAssigningSolution -> solutionChangedLatch.countDown(),
+                taskAssigningSolution -> solvingEndedLatch.countDown());
+        solutionChangedLatch.await(60, TimeUnit.SECONDS);
+        assertEquals(SolverStatus.SOLVING, solverManager.getSolverStatus(tenantId));
+        solvingEndedLatch.await(60, TimeUnit.SECONDS);
+        assertEquals(SolverStatus.STOPPED, solverManager.getSolverStatus(tenantId));
     }
 }
