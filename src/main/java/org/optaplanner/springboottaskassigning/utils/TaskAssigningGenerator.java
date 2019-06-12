@@ -18,6 +18,7 @@ package org.optaplanner.springboottaskassigning.utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -248,7 +249,7 @@ public class TaskAssigningGenerator {
             ArrayList<Skill> randomSkillList = new ArrayList<>(randomEmployee.getSkillSet());
             Collections.shuffle(randomSkillList, random);
             int requiredSkillListSize = 1 + random.nextInt(randomSkillList.size() - 1);
-            taskType.setRequiredSkillList(new ArrayList<>(randomSkillList.subList(0, requiredSkillListSize)));
+            taskType.setRequiredSkillSet(new HashSet<>(randomSkillList.subList(0, requiredSkillListSize)));
             logger.trace("Created taskType with title ({}).", title);
             taskTypeList.add(taskType);
         }

@@ -49,7 +49,7 @@ public class TaskAssigningSolverManagerService {
             try {
                 taskAssigningSolutionRepository.save(taskAssigningSolution);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("Error in onBestSolutionChangedEvent listener", e);
                 // FIXME the exception is eaten and not propagated properly, duplicate by using older version of optaplanner-persistence-jpa
                 throw new RuntimeException(e);
             }
@@ -62,7 +62,7 @@ public class TaskAssigningSolverManagerService {
                 // which is saved again here.
                 taskAssigningSolutionRepository.save(taskAssigningSolution);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("Error in onSolvingEnded listener", e);
                 throw new RuntimeException(e);
             }
         };

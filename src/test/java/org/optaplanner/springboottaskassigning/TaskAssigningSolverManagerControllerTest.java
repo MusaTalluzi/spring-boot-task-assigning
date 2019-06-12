@@ -67,47 +67,47 @@ public class TaskAssigningSolverManagerControllerTest {
         newTenantId = new AtomicLong(0);
     }
 
-    @Test
+    @Test(timeout = 60_000)
     public void simpleProblemWithOneSolver() throws InterruptedException {
         submitProblemsAndSolveThem(1, 1, 1);
     }
 
-    @Test
+    @Test(timeout = 60_000)
     public void simpleProblemsLessThanAvailableProcessors() {
         int numOfProblems = Runtime.getRuntime().availableProcessors() - 1;
         submitProblemsAndSolveThem(numOfProblems, 1, 1);
     }
 
-    @Test
+    @Test(timeout = 60_000)
     public void simpleProblemsEqualToAvailableProcessors() {
         int numOfProblems = Runtime.getRuntime().availableProcessors();
         submitProblemsAndSolveThem(numOfProblems, 1, 1);
     }
 
-    @Test
+    @Test(timeout = 60_000)
     public void complexProblemWithOneSolver() {
         submitProblemsAndSolveThem(1, 10, 10);
     }
 
-    @Test
+    @Test(timeout = 60_000)
     public void complexProblemsLessThanAvailableProcessors() {
         int numOfProblems = Runtime.getRuntime().availableProcessors() - 1;
         submitProblemsAndSolveThem(numOfProblems, 10, 4);
     }
 
-    @Test
+    @Test(timeout = 60_000)
     public void complexProblemsEqualToAvailableProcessors() {
         int numOfProblems = Runtime.getRuntime().availableProcessors();
         submitProblemsAndSolveThem(numOfProblems, 10, 4);
     }
 
-    @Test
+    @Test(timeout = 60_000)
     public void simpleProblemsMoreThanAvailableProcessors() {
         int numOfProblems = Runtime.getRuntime().availableProcessors() * 2;
         submitProblemsAndSolveThem(numOfProblems, 1, 1);
     }
 
-    @Test
+    @Test(timeout = 60_000)
     public void complexProblemsMoreThanAvailableProcessors() {
         int numOfProblems = Runtime.getRuntime().availableProcessors() * 2;
         submitProblemsAndSolveThem(numOfProblems, 10, 4);
@@ -143,8 +143,8 @@ public class TaskAssigningSolverManagerControllerTest {
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        SolverStatus solverStatus = SolverStatus.STOPPED;
-        while (!solverStatus.equals(SolverStatus.SOLVING)) {
+        SolverStatus solverStatus;
+        do { // keep trying until solving started
             String solverStatusAsJsonString = mockMvc.perform(get("/tenants/{tenantId}/solver/status", tenantId)
                     .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
@@ -152,16 +152,18 @@ public class TaskAssigningSolverManagerControllerTest {
                     .getResponse()
                     .getContentAsString();
             solverStatus = objectMapper.readValue(solverStatusAsJsonString, SolverStatus.class);
-            Thread.sleep(1000);
-        }
+        } while (!solverStatus.equals(SolverStatus.SOLVING));
 
-        String solutionAsJsonString = mockMvc.perform(get("/tenants/{tenantId}/solver/bestSolution", tenantId)
-                .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        TaskAssigningSolution solution = objectMapper.readValue(solutionAsJsonString, TaskAssigningSolution.class);
+        TaskAssigningSolution solution;
+        do { // keep trying until a new bestSolution with score has been updated
+            String solutionAsJsonString = mockMvc.perform(get("/tenants/{tenantId}/solver/bestSolution", tenantId)
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andReturn()
+                    .getResponse()
+                    .getContentAsString();
+            solution = objectMapper.readValue(solutionAsJsonString, TaskAssigningSolution.class);
+        } while (solution.getScore() == null);
         scoreVerifier.assertHardWeight("Skill requirements",
                 0, solution.getScore().getHardScore(0), solution);
         scoreVerifier.assertSoftWeight("Critical priority",

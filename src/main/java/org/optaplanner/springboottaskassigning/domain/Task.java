@@ -172,7 +172,7 @@ public class Task extends TaskOrEmployee {
             return 0;
         }
         int count = 0;
-        for (Skill skill : taskType.getRequiredSkillList()) {
+        for (Skill skill : taskType.getRequiredSkillSet()) {
             if (!employee.getSkillSet().contains(skill)) {
                 count++;
             }
@@ -211,7 +211,7 @@ public class Task extends TaskOrEmployee {
         toolText.append("<html><center><b>").append(getLabel()).append("</b><br/>")
                 .append(priority.getLabel()).append("<br/><br/>");
         toolText.append("Required skills:<br/>");
-        for (Skill skill : taskType.getRequiredSkillList()) {
+        for (Skill skill : taskType.getRequiredSkillSet()) {
             toolText.append(skill.getLabel()).append("<br/>");
         }
         toolText.append("<br/>Customer:<br/>").append(customer.getName()).append("<br/>(")

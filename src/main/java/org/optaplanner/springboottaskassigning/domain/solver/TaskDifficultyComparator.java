@@ -29,7 +29,7 @@ public class TaskDifficultyComparator implements Comparator<Task>,
     public int compare(Task a, Task b) {
         return new CompareToBuilder()
                 .append(a.getPriority(), b.getPriority())
-                .append(a.getTaskType().getRequiredSkillList().size(), b.getTaskType().getRequiredSkillList().size())
+                .append(a.getTaskType().getRequiredSkillSet().size(), b.getTaskType().getRequiredSkillSet().size())
                 .append(a.getTaskType().getBaseDuration(), b.getTaskType().getBaseDuration())
                 .append(a.getId(), b.getId())
                 .toComparison();

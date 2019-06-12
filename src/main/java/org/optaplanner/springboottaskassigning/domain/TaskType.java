@@ -16,10 +16,9 @@
 
 package org.optaplanner.springboottaskassigning.domain;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToMany;
@@ -31,8 +30,8 @@ public class TaskType extends AbstractPersistable {
     private String title;
     private int baseDuration; // In minutes
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private List<Skill> requiredSkillList;
+    @ManyToMany(fetch = FetchType.EAGER)
+    private Set<Skill> requiredSkillSet;
 
     public TaskType() {
     }
@@ -42,7 +41,7 @@ public class TaskType extends AbstractPersistable {
         this.code = code;
         this.title = title;
         this.baseDuration = baseDuration;
-        requiredSkillList = new ArrayList<>();
+        requiredSkillSet = new HashSet<>();
     }
 
     public String getCode() {
@@ -69,12 +68,12 @@ public class TaskType extends AbstractPersistable {
         this.baseDuration = baseDuration;
     }
 
-    public List<Skill> getRequiredSkillList() {
-        return requiredSkillList;
+    public Set<Skill> getRequiredSkillSet() {
+        return requiredSkillSet;
     }
 
-    public void setRequiredSkillList(List<Skill> requiredSkillList) {
-        this.requiredSkillList = requiredSkillList;
+    public void setRequiredSkillSet(Set<Skill> requiredSkillList) {
+        this.requiredSkillSet = requiredSkillList;
     }
 
     // ************************************************************************
