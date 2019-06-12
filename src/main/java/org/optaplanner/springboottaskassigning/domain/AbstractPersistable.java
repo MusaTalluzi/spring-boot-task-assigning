@@ -43,6 +43,7 @@ public abstract class AbstractPersistable implements Serializable,
     @PlanningId
     protected Long id;
 
+    // FIXME ensure all entities related have the same tenantId as the Solution entity
     @NotNull
     private Long tenantId;
 
