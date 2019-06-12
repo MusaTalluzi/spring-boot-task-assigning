@@ -18,6 +18,7 @@ package org.optaplanner.springboottaskassigning.solver;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -68,36 +69,24 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     }
 
     @Override
-    public Solution_ getBestSolution(Comparable<?> tenantId) {
+    public Optional<Solution_> getBestSolution(Comparable<?> tenantId) {
         logger.debug("Getting best solution of tenantId ({}).", tenantId);
         SolverTask<Solution_> solverTask = tenantIdToSolverTaskMap.get(tenantId);
-        if (solverTask == null) {
-            logger.error("Tenant ({}) does not have a solver task submitted.", tenantId);
-            return null;
-        }
-        return solverTask.getBestSolution();
+        return solverTask == null ? Optional.empty() : Optional.ofNullable(solverTask.getBestSolution());
     }
 
     @Override
-    public Score getBestScore(Comparable<?> tenantId) {
+    public Optional<Score> getBestScore(Comparable<?> tenantId) {
         logger.debug("Getting best score of tenantId ({}).", tenantId);
         SolverTask<Solution_> solverTask = tenantIdToSolverTaskMap.get(tenantId);
-        if (solverTask == null) {
-            logger.error("Tenant ({}) does not have a solver task submitted.", tenantId);
-            return null;
-        }
-        return solverTask.getBestScore();
+        return solverTask == null ? Optional.empty() : Optional.ofNullable(solverTask.getBestScore());
     }
 
     @Override
-    public SolverStatus getSolverStatus(Comparable<?> tenantId) {
+    public Optional<SolverStatus> getSolverStatus(Comparable<?> tenantId) {
         logger.debug("Getting solver status of tenantId ({}).", tenantId);
         SolverTask<Solution_> solverTask = tenantIdToSolverTaskMap.get(tenantId);
-        if (solverTask == null) {
-            logger.error("Tenant ({}) does not have a solver task submitted.", tenantId);
-            return null;
-        }
-        return solverTask.getSolverStatus();
+        return solverTask == null ? Optional.empty() : Optional.ofNullable(solverTask.getSolverStatus());
     }
 
     @Override

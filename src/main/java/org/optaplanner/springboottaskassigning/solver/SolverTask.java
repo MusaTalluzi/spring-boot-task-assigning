@@ -53,7 +53,7 @@ public class SolverTask<Solution_> implements Runnable {
         } catch (Exception e) {
             // TODO: better handling of exception (using Callable? / ExtendedExecuter with afterExecute() method)
             // TODO propagate exception to SolverManager so it restarts solving for this tenant
-            e.printStackTrace();
+            logger.error("Error in SolverTask", e);
             Thread.currentThread().interrupt();
         }
     }
