@@ -16,8 +16,10 @@
 
 package org.optaplanner.springboottaskassigning.solver;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 
+import org.optaplanner.core.api.domain.solution.Solution;
 import org.optaplanner.core.api.score.Score;
 
 public interface SolverManager<Solution_> {
@@ -26,11 +28,11 @@ public interface SolverManager<Solution_> {
     void solve(Comparable<?> tenantId, Solution_ planningSolution,
                Consumer<Solution_> onBestSolutionChangedEvent, Consumer<Solution_> onSolvingEnded);
 
-    Solution_ getBestSolution(Comparable<?> tenantId);
+    Optional<Solution_> getBestSolution(Comparable<?> tenantId);
 
-    Score getBestScore(Comparable<?> tenantId);
+    Optional<Score> getBestScore(Comparable<?> tenantId);
 
-    SolverStatus getSolverStatus(Comparable<?> tenantId);
+    Optional<SolverStatus> getSolverStatus(Comparable<?> tenantId);
 
     void shutdown() throws InterruptedException;
 }

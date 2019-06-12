@@ -16,7 +16,6 @@
 
 package org.optaplanner.springboottaskassigning;
 
-import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
@@ -62,13 +61,10 @@ public class TaskAssigningSolverManagerControllerTest {
     );
 
     private static AtomicLong newTenantId;
-    // FIXME set a seed for random in a thread safe way
-    private static Random random;
 
     @BeforeClass
     public static void setup() {
         newTenantId = new AtomicLong(0);
-        random = new Random(47);
     }
 
     @Test
@@ -123,6 +119,7 @@ public class TaskAssigningSolverManagerControllerTest {
         IntStream.range(0, problemSize).parallel().forEach(i -> {
             try {
                 logger.info("Submitting problem " + i);
+                // FIXME ThreadLocalRandom does not support setting a Random seed
                 submitOneProblemAndSolveIt(ThreadLocalRandom.current().nextInt(taskListSizeBound) + 1,
                         ThreadLocalRandom.current().nextInt(employeeListSizeBound) + 1);
             } catch (Exception e) {
@@ -146,16 +143,17 @@ public class TaskAssigningSolverManagerControllerTest {
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        Thread.sleep(1000L); // Give solver thread time to start
-
-        // FIXME: when number of solvers is more than available processors, 1 second isn't enough for all solvers to start
-        String solvingStatusJsonString = objectMapper.writeValueAsString(SolverStatus.SOLVING);
-        mockMvc.perform(get("/tenants/{tenantId}/solver/status", tenantId)
-                .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-//                .andExpect(content().string(solvingStatusJsonString));
-
-        Thread.sleep(2000L); // Give solver time to solve
+        SolverStatus solverStatus = SolverStatus.STOPPED;
+        while (!solverStatus.equals(SolverStatus.SOLVING)) {
+            String solverStatusAsJsonString = mockMvc.perform(get("/tenants/{tenantId}/solver/status", tenantId)
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andReturn()
+                    .getResponse()
+                    .getContentAsString();
+            solverStatus = objectMapper.readValue(solverStatusAsJsonString, SolverStatus.class);
+            Thread.sleep(1000);
+        }
 
         String solutionAsJsonString = mockMvc.perform(get("/tenants/{tenantId}/solver/bestSolution", tenantId)
                 .accept(MediaType.APPLICATION_JSON))
@@ -163,16 +161,20 @@ public class TaskAssigningSolverManagerControllerTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-//        CloudBalance solution = objectMapper.readValue(solutionAsJsonString, TaskAssigningSolution.class);
+        TaskAssigningSolution solution = objectMapper.readValue(solutionAsJsonString, TaskAssigningSolution.class);
+        scoreVerifier.assertHardWeight("Skill requirements",
+                0, solution.getScore().getHardScore(0), solution);
+        scoreVerifier.assertSoftWeight("Critical priority",
+                0, solution.getScore().getSoftScore(0), solution);
+        scoreVerifier.assertSoftWeight("Minimze makespan (starting with the latest ending employee first)",
+                1, solution.getScore().getSoftScore(1), solution);
+        scoreVerifier.assertSoftWeight("Major priority",
+                2, solution.getScore().getSoftScore(2), solution);
+        scoreVerifier.assertSoftWeight("Minor priority",
+                3, solution.getScore().getSoftScore(3), solution);
 
-        // FIXME the score might change between the two REST request invocations or NULL of not solving has not started yet
-        // FIXME Fix: after adding persistence, compare score of solution with score stored
-        String bestScoreAsString = mockMvc.perform(get("/tenants/{tenantId}/solver/bestScore", tenantId)
+        mockMvc.perform(get("/tenants/{tenantId}/solver/bestScore", tenantId)
                 .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-//        BendableScore score = objectMapper.readValue(bestScoreAsString, BendableScore.class);
+                .andExpect(status().isOk());
     }
 }

@@ -16,6 +16,7 @@
 
 package org.optaplanner.springboottaskassigning;
 
+import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 
 import javax.annotation.PostConstruct;
@@ -83,15 +84,15 @@ public class TaskAssigningSolverManagerService {
         solverManager.solve(tenantId, planningProblem, onBestSolutionChangedEvent, onSolvingEnded);
     }
 
-    public TaskAssigningSolution bestSolution(Long tenantId) {
-        return solverManager.getBestSolution(tenantId);
+    public TaskAssigningSolution bestSolution(Long tenantId) throws NoSuchElementException {
+        return solverManager.getBestSolution(tenantId).get();
     }
 
-    public Score bestScore(Long tenantId) {
-        return solverManager.getBestScore(tenantId);
+    public Score bestScore(Long tenantId) throws NoSuchElementException {
+        return solverManager.getBestScore(tenantId).get();
     }
 
-    public SolverStatus solverStatus(Long tenantId) {
-        return solverManager.getSolverStatus(tenantId);
+    public SolverStatus solverStatus(Long tenantId) throws NoSuchElementException {
+        return solverManager.getSolverStatus(tenantId).get();
     }
 }

@@ -16,17 +16,18 @@
 
 package org.optaplanner.springboottaskassigning.solver;
 
+import java.util.NoSuchElementException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.optaplanner.core.api.score.Score;
 import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution;
 import org.optaplanner.springboottaskassigning.utils.TaskAssigningGenerator;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class DefaultSolverManagerTest {
@@ -53,19 +54,14 @@ public class DefaultSolverManagerTest {
     public void basicUsageOfSolverManagerWithOneProblem() throws InterruptedException {
         TaskAssigningSolution problem =
                 new TaskAssigningGenerator(tenantId).createTaskAssigningSolution(24, 4);
-
         solverManager.solve(tenantId, problem,
                 taskAssigningSolution -> solutionChangedLatch.countDown(),
                 taskAssigningSolution -> solvingEndedLatch.countDown());
         solutionChangedLatch.await(60, TimeUnit.SECONDS);
 
-        assertEquals(solverManager.getSolverStatus(tenantId), SolverStatus.SOLVING);
-
-        TaskAssigningSolution solution = solverManager.getBestSolution(tenantId);
-        assertEquals(solution.getTenantId(), tenantId);
-
-        Score score = solverManager.getBestScore(tenantId);
-        assertTrue(score.isSolutionInitialized());
+        solverManager.getSolverStatus(tenantId).ifPresent(solverStatus -> assertEquals(solverStatus, SolverStatus.SOLVING));
+        solverManager.getBestSolution(tenantId).ifPresent(solution -> assertEquals(solution.getTenantId(), tenantId));
+        solverManager.getBestScore(tenantId).ifPresent(score -> assertTrue(score.isSolutionInitialized()));
     }
 
     @Test
@@ -76,8 +72,20 @@ public class DefaultSolverManagerTest {
                 taskAssigningSolution -> solutionChangedLatch.countDown(),
                 taskAssigningSolution -> solvingEndedLatch.countDown());
         solutionChangedLatch.await(60, TimeUnit.SECONDS);
-        assertEquals(SolverStatus.SOLVING, solverManager.getSolverStatus(tenantId));
+        solverManager.getSolverStatus(tenantId).ifPresent(solverStatus -> assertEquals(solverStatus, SolverStatus.SOLVING));
         solvingEndedLatch.await(60, TimeUnit.SECONDS);
-        assertEquals(SolverStatus.STOPPED, solverManager.getSolverStatus(tenantId));
+        solverManager.getSolverStatus(tenantId).ifPresent(solverStatus -> assertEquals(solverStatus, SolverStatus.STOPPED));
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void tryToGetNonExistingSolution() throws InterruptedException {
+        TaskAssigningSolution problem =
+                new TaskAssigningGenerator(tenantId).createTaskAssigningSolution(1, 1);
+        solverManager.solve(tenantId, problem,
+                taskAssigningSolution -> solutionChangedLatch.countDown(),
+                taskAssigningSolution -> solvingEndedLatch.countDown());
+        solutionChangedLatch.await(60, TimeUnit.SECONDS);
+        assertFalse(solverManager.getBestSolution(tenantId + 1).isPresent());
+        solverManager.getBestSolution(tenantId + 1).get();
     }
 }
