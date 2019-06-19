@@ -16,7 +16,6 @@
 
 package org.optaplanner.springboottaskassigning.domain;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
@@ -35,7 +34,7 @@ public abstract class TaskOrEmployee extends AbstractPersistable {
     @InverseRelationShadowVariable(sourceVariableName = "previousTaskOrEmployee")
     // Ignore this in the json result to keep Tasks details in taskList only
     @JsonIgnore
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "previousTaskOrEmployee")
     protected Task nextTask;
 
     public TaskOrEmployee() {

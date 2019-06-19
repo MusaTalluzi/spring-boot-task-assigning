@@ -137,6 +137,7 @@ public class TaskAssigningGenerator {
         solution.setFrozenCutoff(0);
 
         logger.info("TaskAssigningSolution {} has {} tasks, {} skills, {} employees, {} task types and {} customers.",
+                solution.getId(),
                 taskListSize,
                 skillListSize,
                 employeeListSize,

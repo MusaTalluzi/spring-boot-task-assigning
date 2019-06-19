@@ -26,6 +26,7 @@ import java.util.function.Consumer;
 
 import org.optaplanner.core.api.score.Score;
 import org.optaplanner.core.api.solver.SolverFactory;
+import org.optaplanner.core.api.solver.event.SolverEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,6 +88,17 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
         logger.debug("Getting solver status of tenantId ({}).", tenantId);
         SolverTask<Solution_> solverTask = tenantIdToSolverTaskMap.get(tenantId);
         return solverTask == null ? Optional.empty() : Optional.ofNullable(solverTask.getSolverStatus());
+    }
+
+    @Override
+    public void addEventListener(Comparable<?> tenantId, SolverEventListener<Solution_> eventListener) {
+        logger.debug("Adding an event listener for tenantId ({}).", tenantId);
+        SolverTask<Solution_> solverTask = tenantIdToSolverTaskMap.get(tenantId);
+        if (solverTask != null) {
+            solverTask.addEventListener(eventListener);
+        } else {
+            logger.error("Tenant ({}) does not have a SolverTask submitted.", tenantId);
+        }
     }
 
     @Override

@@ -16,20 +16,32 @@
 
 package org.optaplanner.springboottaskassigning;
 
+import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
 import org.optaplanner.core.api.score.Score;
+import org.optaplanner.springboottaskassigning.domain.Employee;
+import org.optaplanner.springboottaskassigning.domain.Task;
 import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution;
+import org.optaplanner.springboottaskassigning.domain.TaskOrEmployee;
+import org.optaplanner.springboottaskassigning.repository.TaskAssigningSolutionRepository;
+import org.optaplanner.springboottaskassigning.repository.TaskRepository;
 import org.optaplanner.springboottaskassigning.solver.DefaultSolverManager;
 import org.optaplanner.springboottaskassigning.solver.SolverManager;
 import org.optaplanner.springboottaskassigning.solver.SolverStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TaskAssigningSolverManagerService {
@@ -37,17 +49,21 @@ public class TaskAssigningSolverManagerService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final TaskAssigningSolutionRepository taskAssigningSolutionRepository;
+    private final TaskRepository taskRepository;
     private final Consumer<TaskAssigningSolution> onBestSolutionChangedEvent;
     private final Consumer<TaskAssigningSolution> onSolvingEnded;
 
     private SolverManager<TaskAssigningSolution> solverManager;
 
-    public TaskAssigningSolverManagerService(TaskAssigningSolutionRepository taskAssigningSolutionRepository) {
+    public TaskAssigningSolverManagerService(TaskAssigningSolutionRepository taskAssigningSolutionRepository,
+                                             TaskRepository taskRepository) {
         this.taskAssigningSolutionRepository = taskAssigningSolutionRepository;
+        this.taskRepository = taskRepository;
         onBestSolutionChangedEvent = taskAssigningSolution -> {
             logger.debug("Best solution changed.");
             try {
-                taskAssigningSolutionRepository.save(taskAssigningSolution);
+                // TODO: sync-up with Jiri about StaleObjectStateException
+                updateSolution(taskAssigningSolution);
             } catch (Exception e) {
                 logger.error("Error in onBestSolutionChangedEvent listener", e);
                 // FIXME the exception is eaten and not propagated properly, duplicate by using older version of optaplanner-persistence-jpa
@@ -57,10 +73,7 @@ public class TaskAssigningSolverManagerService {
         onSolvingEnded = taskAssigningSolution -> {
             logger.debug("Solving ended.");
             try {
-                // FIXME org.hibernate.StaleObjectStateException: Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)
-                // cause: when saving after bestSolutionChangedEvent, persisted solution version is different than in memory solution version
-                // which is saved again here.
-                taskAssigningSolutionRepository.save(taskAssigningSolution);
+                updateSolution(taskAssigningSolution);
             } catch (Exception e) {
                 logger.error("Error in onSolvingEnded listener", e);
                 throw new RuntimeException(e);
@@ -68,10 +81,61 @@ public class TaskAssigningSolverManagerService {
         };
     }
 
+    @Transactional
+    private void updateSolution(TaskAssigningSolution taskAssigningSolution) {
+        Long tenantId = taskAssigningSolution.getTenantId();
+        Optional<TaskAssigningSolution> solutionEntityOptional = taskAssigningSolutionRepository.findById(taskAssigningSolution.getId());
+        if (solutionEntityOptional.isPresent()) {
+            TaskAssigningSolution solutionEntity = solutionEntityOptional.get();
+            if (taskAssigningSolution.getScore() != null && !taskAssigningSolution.getScore().equals(solutionEntity.getScore())) {
+                solutionEntity.setScore(taskAssigningSolution.getScore());
+                taskAssigningSolutionRepository.save(solutionEntity);
+            }
+            // Update: Tasks (nextTask, previousTaskOrEmployee, employee, start&EndTime) and Employees (nextTask)
+            Map<Long, Task> taskEntityMap = solutionEntity.getTaskList()
+                    .stream().parallel().collect(Collectors.toConcurrentMap(Task::getId, task -> task));
+            Map<Long, Employee> employeeEntityMap = solutionEntity.getEmployeeList()
+                    .stream().parallel().collect(Collectors.toConcurrentMap(Employee::getId, Function.identity()));
+
+            taskAssigningSolution.getTaskList().stream().parallel()
+                    .filter(task -> task.getPreviousTaskOrEmployee() != null)
+                    .filter(task -> !task.getPreviousTaskOrEmployee().equals(taskEntityMap.get(task.getId()).getPreviousTaskOrEmployee()))
+                    .forEach(task -> updateTask(task, taskEntityMap.get(task.getId()), taskEntityMap, employeeEntityMap));
+        } else {
+            logger.error("Trying to update solution ({}) that does not exist.", tenantId);
+        }
+    }
+
+    private void updateTask(Task newTask, Task taskEntity, Map<Long, Task> taskEntityMap, Map<Long, Employee> employeeEntityMap) {
+        TaskOrEmployee newPreviousTaskOrEmployee = newTask.getPreviousTaskOrEmployee();
+        if (newPreviousTaskOrEmployee instanceof Task) {
+            taskEntity.setPreviousTaskOrEmployee(taskEntityMap.get(newPreviousTaskOrEmployee.getId()));
+        } else if (newPreviousTaskOrEmployee instanceof Employee) {
+            taskEntity.setPreviousTaskOrEmployee(employeeEntityMap.get(newPreviousTaskOrEmployee.getId()));
+        } else {
+            throw new IllegalArgumentException("previousTaskOrEmployee of task (" + newTask.getId() + ") is neither " +
+                    "an Employee nor a Task.");
+        }
+        taskEntity.getPreviousTaskOrEmployee().setNextTask(taskEntity);
+
+        taskEntity.setNextTask(Objects.isNull(newTask.getNextTask()) ? null
+                : taskEntityMap.get(newTask.getNextTask().getId()));
+        if (Objects.nonNull(taskEntity.getNextTask())) {
+            taskEntity.getNextTask().setPreviousTaskOrEmployee(taskEntity);
+        }
+
+        taskEntity.setEmployee(Objects.isNull(newTask.getEmployee()) ? null
+                : employeeEntityMap.get(newTask.getEmployee().getId()));
+        taskEntity.setStartTime(newTask.getStartTime());
+        taskEntity.setEndTime(newTask.getEndTime());
+        taskRepository.save(taskEntity);
+    }
+
     @PostConstruct
     public void loadExistingProblemsAndStartSolving() {
         solverManager = new DefaultSolverManager<>();
-        taskAssigningSolutionRepository.findAll()
+        List<TaskAssigningSolution> solutionList = taskAssigningSolutionRepository.findAll();
+        solutionList
                 .forEach(taskAssigningSolution -> solve(taskAssigningSolution.getTenantId(), taskAssigningSolution));
     }
 
@@ -81,6 +145,8 @@ public class TaskAssigningSolverManagerService {
     }
 
     public void solve(Long tenantId, TaskAssigningSolution planningProblem) {
+        taskAssigningSolutionRepository.save(planningProblem);
+
         solverManager.solve(tenantId, planningProblem, onBestSolutionChangedEvent, onSolvingEnded);
     }
 

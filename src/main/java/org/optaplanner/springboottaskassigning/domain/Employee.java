@@ -24,6 +24,7 @@ import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
@@ -38,12 +39,11 @@ public class Employee extends TaskOrEmployee {
 
     private String fullName;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             joinColumns = @JoinColumn(name = "employee_id"),
             inverseJoinColumns = @JoinColumn(name = "skill_id")
     )
-    @LazyCollection(LazyCollectionOption.FALSE)
     private Set<Skill> skillSet;
 
     @ElementCollection
