@@ -21,6 +21,8 @@ import java.util.Set;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 
 @Entity
@@ -31,6 +33,10 @@ public class TaskType extends AbstractPersistable {
     private int baseDuration; // In minutes
 
     @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            joinColumns = @JoinColumn(name = "task_type_id"),
+            inverseJoinColumns = @JoinColumn(name = "required_skill_id")
+    )
     private Set<Skill> requiredSkillSet;
 
     public TaskType() {

@@ -19,18 +19,23 @@ package org.optaplanner.springboottaskassigning.solver;
 import java.util.NoSuchElementException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution;
 import org.optaplanner.springboottaskassigning.utils.TaskAssigningGenerator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class DefaultSolverManagerTest {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private SolverManager<TaskAssigningSolution> solverManager;
     private Long tenantId;
@@ -87,5 +92,21 @@ public class DefaultSolverManagerTest {
         solutionChangedLatch.await(60, TimeUnit.SECONDS);
         assertFalse(solverManager.getBestSolution(tenantId + 1).isPresent());
         solverManager.getBestSolution(tenantId + 1).get();
+    }
+
+    @Test
+    public void onBestSolutionChangedCalledEveryTimeASolutionIsChanged() throws InterruptedException {
+        AtomicInteger bestSolutionChangedEventCount = new AtomicInteger(0);
+        AtomicInteger onBestSolutionChangedEventInvocationCount = new AtomicInteger(0);
+        TaskAssigningSolution problem =
+                new TaskAssigningGenerator(tenantId).createTaskAssigningSolution(24, 8);
+        solverManager.solve(tenantId, problem,
+                taskAssigningSolution -> bestSolutionChangedEventCount.incrementAndGet(),
+                taskAssigningSolution -> solvingEndedLatch.countDown());
+
+        solverManager.addEventListener(tenantId, bestSolutionChangedEvent -> onBestSolutionChangedEventInvocationCount.incrementAndGet());
+        solvingEndedLatch.await(60, TimeUnit.SECONDS);
+        assertEquals(onBestSolutionChangedEventInvocationCount.get(), bestSolutionChangedEventCount.get());
+        logger.info("Number of bestSolutionChangedEvents: {}.", bestSolutionChangedEventCount.get());
     }
 }

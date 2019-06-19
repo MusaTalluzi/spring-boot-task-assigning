@@ -16,7 +16,6 @@
 
 package org.optaplanner.springboottaskassigning.domain;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
@@ -51,7 +50,7 @@ public class Task extends TaskOrEmployee {
             graphType = PlanningVariableGraphType.CHAINED)
     // Ignore this in the json result to keep Tasks details in taskList only
     @JsonIgnore
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne
     private TaskOrEmployee previousTaskOrEmployee;
 
     // Shadow variables
