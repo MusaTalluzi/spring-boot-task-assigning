@@ -178,5 +178,15 @@ public class TaskAssigningSolverManagerControllerTest {
         mockMvc.perform(get("/tenants/{tenantId}/solver/bestScore", tenantId)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+
+        do { // Wait until solving ends
+            String solverStatusAsJsonString = mockMvc.perform(get("/tenants/{tenantId}/solver/status", tenantId)
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andReturn()
+                    .getResponse()
+                    .getContentAsString();
+            solverStatus = objectMapper.readValue(solverStatusAsJsonString, SolverStatus.class);
+        } while (!solverStatus.equals(SolverStatus.SOLVING));
     }
 }
