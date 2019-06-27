@@ -16,7 +16,6 @@
 
 package org.optaplanner.springboottaskassigning.solver;
 
-import java.util.NoSuchElementException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class DefaultSolverManagerTest {
@@ -64,9 +63,9 @@ public class DefaultSolverManagerTest {
                 taskAssigningSolution -> solvingEndedLatch.countDown());
         solutionChangedLatch.await(60, TimeUnit.SECONDS);
 
-        solverManager.getSolverStatus(tenantId).ifPresent(solverStatus -> assertEquals(solverStatus, SolverStatus.SOLVING));
-        solverManager.getBestSolution(tenantId).ifPresent(solution -> assertEquals(solution.getTenantId(), tenantId));
-        solverManager.getBestScore(tenantId).ifPresent(score -> assertTrue(score.isSolutionInitialized()));
+        assertEquals(solverManager.getSolverStatus(tenantId), SolverStatus.SOLVING);
+        assertEquals(solverManager.getBestSolution(tenantId).getTenantId(), tenantId);
+        assertTrue(solverManager.getBestScore(tenantId).isSolutionInitialized());
     }
 
     @Test
@@ -77,12 +76,12 @@ public class DefaultSolverManagerTest {
                 taskAssigningSolution -> solutionChangedLatch.countDown(),
                 taskAssigningSolution -> solvingEndedLatch.countDown());
         solutionChangedLatch.await(60, TimeUnit.SECONDS);
-        solverManager.getSolverStatus(tenantId).ifPresent(solverStatus -> assertEquals(solverStatus, SolverStatus.SOLVING));
+        assertEquals(solverManager.getSolverStatus(tenantId), SolverStatus.SOLVING);
         solvingEndedLatch.await(60, TimeUnit.SECONDS);
-        solverManager.getSolverStatus(tenantId).ifPresent(solverStatus -> assertEquals(solverStatus, SolverStatus.STOPPED));
+        assertEquals(solverManager.getSolverStatus(tenantId), SolverStatus.STOPPED);
     }
 
-    @Test(expected = NoSuchElementException.class)
+    @Test
     public void tryToGetNonExistingSolution() throws InterruptedException {
         TaskAssigningSolution problem =
                 new TaskAssigningGenerator(tenantId).createTaskAssigningSolution(1, 1);
@@ -90,8 +89,7 @@ public class DefaultSolverManagerTest {
                 taskAssigningSolution -> solutionChangedLatch.countDown(),
                 taskAssigningSolution -> solvingEndedLatch.countDown());
         solutionChangedLatch.await(60, TimeUnit.SECONDS);
-        assertFalse(solverManager.getBestSolution(tenantId + 1).isPresent());
-        solverManager.getBestSolution(tenantId + 1).get();
+        assertNull(solverManager.getBestSolution(tenantId + 1));
     }
 
     @Test

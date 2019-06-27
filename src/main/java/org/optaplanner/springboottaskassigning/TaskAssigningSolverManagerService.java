@@ -154,14 +154,14 @@ public class TaskAssigningSolverManagerService {
     }
 
     public TaskAssigningSolution getBestSolution(Long problemId) throws NoSuchElementException {
-        return solverManager.getBestSolution(problemId).get();
+        return solverManager.getBestSolution(problemId);
     }
 
     public Score getBestScore(Long problemId) throws NoSuchElementException {
-        return solverManager.getBestScore(problemId).get();
+        return solverManager.getBestScore(problemId);
     }
 
     public SolverStatus getSolverStatus(Long problemId) throws NoSuchElementException {
-        return solverManager.getSolverStatus(problemId).get();
+        return solverManager.getSolverStatus(problemId);
     }
 }

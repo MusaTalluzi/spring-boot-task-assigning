@@ -16,8 +16,6 @@
 
 package org.optaplanner.springboottaskassigning;
 
-import java.util.NoSuchElementException;
-
 import org.optaplanner.core.api.score.Score;
 import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution;
 import org.optaplanner.springboottaskassigning.solver.SolverStatus;
@@ -47,31 +45,31 @@ public class TaskAssigningSolverManagerController {
 
     @GetMapping("/bestSolution")
     public TaskAssigningSolution bestSolution(@PathVariable Long problemId) {
-        try {
-            return solverManagerService.getBestSolution(problemId);
-        } catch (NoSuchElementException e) {
+        TaskAssigningSolution bestSolution = solverManagerService.getBestSolution(problemId);
+        if (bestSolution == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Tenant (" + problemId + ") does not have a solver task submitted or solving has not started yet.", e);
+                    "Problem (" + problemId + ") does not have a solver task submitted or solving has not started yet.");
         }
+        return bestSolution;
     }
 
     @GetMapping("/bestScore")
     public Score bestScore(@PathVariable Long problemId) {
-        try {
-            return solverManagerService.getBestScore(problemId);
-        } catch (NoSuchElementException e) {
+        Score score = solverManagerService.getBestScore(problemId);
+        if (score == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Tenant (" + problemId + ") does not have a solver task submitted or solving has not started yet.", e);
+                    "Problem (" + problemId + ") does not have a solver task submitted or solving has not started yet.");
         }
+        return score;
     }
 
     @GetMapping("/status")
     public SolverStatus solverStatus(@PathVariable Long problemId) {
-        try {
-            return solverManagerService.getSolverStatus(problemId);
-        } catch (NoSuchElementException e) {
+        SolverStatus status = solverManagerService.getSolverStatus(problemId);
+        if (status == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Tenant (" + problemId + ") does not have a solver task submitted or solving has not started yet.", e);
+                    "Problem (" + problemId + ") does not have a solver task submitted or solving has not started yet.");
         }
+        return status;
     }
 }

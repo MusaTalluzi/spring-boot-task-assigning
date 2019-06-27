@@ -18,7 +18,6 @@ package org.optaplanner.springboottaskassigning.solver;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -70,24 +69,24 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     }
 
     @Override
-    public Optional<Solution_> getBestSolution(Object problemId) {
+    public Solution_ getBestSolution(Object problemId) {
         logger.debug("Getting best solution of problemId ({}).", problemId);
         SolverTask<Solution_> solverTask = problemIdToSolverTaskMap.get(problemId);
-        return solverTask == null ? Optional.empty() : Optional.ofNullable(solverTask.getBestSolution());
+        return solverTask == null ? null : solverTask.getBestSolution();
     }
 
     @Override
-    public Optional<Score> getBestScore(Object problemId) {
+    public Score getBestScore(Object problemId) {
         logger.debug("Getting best score of problemId ({}).", problemId);
         SolverTask<Solution_> solverTask = problemIdToSolverTaskMap.get(problemId);
-        return solverTask == null ? Optional.empty() : Optional.ofNullable(solverTask.getBestScore());
+        return solverTask == null ? null : solverTask.getBestScore();
     }
 
     @Override
-    public Optional<SolverStatus> getSolverStatus(Object problemId) {
+    public SolverStatus getSolverStatus(Object problemId) {
         logger.debug("Getting solver status of problemId ({}).", problemId);
         SolverTask<Solution_> solverTask = problemIdToSolverTaskMap.get(problemId);
-        return solverTask == null ? Optional.empty() : Optional.ofNullable(solverTask.getSolverStatus());
+        return solverTask == null ? null : solverTask.getSolverStatus();
     }
 
     @Override
