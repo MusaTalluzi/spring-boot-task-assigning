@@ -20,5 +20,5 @@ import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TaskAssigningSolutionRepository extends JpaRepository<TaskAssigningSolution, Long> {
-
+    boolean existsByTenantId(Long tenantId);
 }

@@ -24,18 +24,17 @@ import org.optaplanner.core.api.solver.event.SolverEventListener;
 
 public interface SolverManager<Solution_> {
 
-    // FIXME CRITICAL BUG: iterate over planning solution entities and set tenantId, or induce it from solution.getTenantId()
-    // TODO Replace tenantId with solverId
-    void solve(Comparable<?> tenantId, Solution_ planningSolution,
+    // FIXME CRITICAL BUG: iterate over planning solution entities and set tenantId, or induce it from solution.getProblemId()
+    void solve(Object problemId, Solution_ planningSolution,
                Consumer<Solution_> onBestSolutionChangedEvent, Consumer<Solution_> onSolvingEnded);
 
-    Optional<Solution_> getBestSolution(Comparable<?> tenantId);
+    Optional<Solution_> getBestSolution(Object problemId);
 
-    Optional<Score> getBestScore(Comparable<?> tenantId);
+    Optional<Score> getBestScore(Object problemId);
 
-    Optional<SolverStatus> getSolverStatus(Comparable<?> tenantId);
+    Optional<SolverStatus> getSolverStatus(Object problemId);
 
-    void addEventListener(Comparable<?> tenantId, SolverEventListener<Solution_> eventListener);
+    void addEventListener(Object problemId, SolverEventListener<Solution_> eventListener);
 
     void shutdown() throws InterruptedException;
 }

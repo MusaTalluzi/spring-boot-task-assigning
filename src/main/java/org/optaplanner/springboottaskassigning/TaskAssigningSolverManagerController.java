@@ -32,44 +32,46 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
-@RequestMapping("/tenants/{tenantId}/solver")
+@RequestMapping("/tenants/{problemId}/solver")
 public class TaskAssigningSolverManagerController {
 
     @Autowired
     private TaskAssigningSolverManagerService solverManagerService;
 
     @PostMapping
-    public void solve(@PathVariable Long tenantId, @RequestBody TaskAssigningSolution planningProblem) {
-        solverManagerService.solve(tenantId, planningProblem);
+    public void solve(@PathVariable Long problemId, @RequestBody TaskAssigningSolution planningProblem) {
+        if (!solverManagerService.solve(problemId, planningProblem)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Problem ( " + problemId + ") already exists.");
+        }
     }
 
     @GetMapping("/bestSolution")
-    public TaskAssigningSolution bestSolution(@PathVariable Long tenantId) {
+    public TaskAssigningSolution bestSolution(@PathVariable Long problemId) {
         try {
-            return solverManagerService.getBestSolution(tenantId);
+            return solverManagerService.getBestSolution(problemId);
         } catch (NoSuchElementException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Tenant (" + tenantId + ") does not have a solver task submitted or solving has not started yet.", e);
+                    "Tenant (" + problemId + ") does not have a solver task submitted or solving has not started yet.", e);
         }
     }
 
     @GetMapping("/bestScore")
-    public Score bestScore(@PathVariable Long tenantId) {
+    public Score bestScore(@PathVariable Long problemId) {
         try {
-            return solverManagerService.getBestScore(tenantId);
+            return solverManagerService.getBestScore(problemId);
         } catch (NoSuchElementException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Tenant (" + tenantId + ") does not have a solver task submitted or solving has not started yet.", e);
+                    "Tenant (" + problemId + ") does not have a solver task submitted or solving has not started yet.", e);
         }
     }
 
     @GetMapping("/status")
-    public SolverStatus solverStatus(@PathVariable Long tenantId) {
+    public SolverStatus solverStatus(@PathVariable Long problemId) {
         try {
-            return solverManagerService.getSolverStatus(tenantId);
+            return solverManagerService.getSolverStatus(problemId);
         } catch (NoSuchElementException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Tenant (" + tenantId + ") does not have a solver task submitted or solving has not started yet.", e);
+                    "Tenant (" + problemId + ") does not have a solver task submitted or solving has not started yet.", e);
         }
     }
 }

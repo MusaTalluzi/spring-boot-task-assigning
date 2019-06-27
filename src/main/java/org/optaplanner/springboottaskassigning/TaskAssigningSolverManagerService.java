@@ -144,21 +144,24 @@ public class TaskAssigningSolverManagerService {
         solverManager.shutdown();
     }
 
-    public void solve(Long tenantId, TaskAssigningSolution planningProblem) {
+    public boolean solve(Long problemId, TaskAssigningSolution planningProblem) {
+        if (taskAssigningSolutionRepository.existsByTenantId(problemId)) {
+            return false;
+        }
         taskAssigningSolutionRepository.save(planningProblem);
-
-        solverManager.solve(tenantId, planningProblem, onBestSolutionChangedEvent, onSolvingEnded);
+        solverManager.solve(problemId, planningProblem, onBestSolutionChangedEvent, onSolvingEnded);
+        return true;
     }
 
-    public TaskAssigningSolution getBestSolution(Long tenantId) throws NoSuchElementException {
-        return solverManager.getBestSolution(tenantId).get();
+    public TaskAssigningSolution getBestSolution(Long problemId) throws NoSuchElementException {
+        return solverManager.getBestSolution(problemId).get();
     }
 
-    public Score getBestScore(Long tenantId) throws NoSuchElementException {
-        return solverManager.getBestScore(tenantId).get();
+    public Score getBestScore(Long problemId) throws NoSuchElementException {
+        return solverManager.getBestScore(problemId).get();
     }
 
-    public SolverStatus getSolverStatus(Long tenantId) throws NoSuchElementException {
-        return solverManager.getSolverStatus(tenantId).get();
+    public SolverStatus getSolverStatus(Long problemId) throws NoSuchElementException {
+        return solverManager.getSolverStatus(problemId).get();
     }
 }

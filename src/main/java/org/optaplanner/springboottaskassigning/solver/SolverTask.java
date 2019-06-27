@@ -28,14 +28,14 @@ public class SolverTask<Solution_> implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(SolverTask.class);
 
-    private final Comparable<?> tenantId;
+    private final Object problemId;
     private Solver<Solution_> solver;
     private Solution_ planningProblem;
     private Consumer<Solution_> onSolvingEnded;
 
-    public SolverTask(Comparable<?> tenantId, Solver<Solution_> solver, Solution_ planningProblem,
+    public SolverTask(Object problemId, Solver<Solution_> solver, Solution_ planningProblem,
                       Consumer<Solution_> onSolvingEnded) {
-        this.tenantId = tenantId;
+        this.problemId = problemId;
         this.solver = solver;
         this.planningProblem = planningProblem;
         this.onSolvingEnded = onSolvingEnded;
@@ -44,7 +44,7 @@ public class SolverTask<Solution_> implements Runnable {
     @Override
     public void run() {
         try {
-            logger.info("Running solverTask for tenantId ({}).", tenantId);
+            logger.info("Running solverTask for problemId ({}).", problemId);
             solver.solve(planningProblem);
             if (onSolvingEnded != null) {
                 // TODO implement this on a separate thread
@@ -59,8 +59,8 @@ public class SolverTask<Solution_> implements Runnable {
         }
     }
 
-    public Comparable<?> getTenantId() {
-        return tenantId;
+    public Object getProblemId() {
+        return problemId;
     }
 
     public Solution_ getBestSolution() {
