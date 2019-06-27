@@ -33,6 +33,6 @@ public class TaskAssigningSolverManagerServiceTest {
 
     @Test(expected = NoSuchElementException.class)
     public void tryToGetBestSolutionOfNonExistingTenantId() {
-        taskAssigningSolverManagerService.bestScore(1000L);
+        taskAssigningSolverManagerService.getBestScore(1000L);
     }
 }
