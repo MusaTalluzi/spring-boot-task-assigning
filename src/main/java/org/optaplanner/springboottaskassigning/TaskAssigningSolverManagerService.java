@@ -150,15 +150,15 @@ public class TaskAssigningSolverManagerService {
         solverManager.solve(tenantId, planningProblem, onBestSolutionChangedEvent, onSolvingEnded);
     }
 
-    public TaskAssigningSolution bestSolution(Long tenantId) throws NoSuchElementException {
+    public TaskAssigningSolution getBestSolution(Long tenantId) throws NoSuchElementException {
         return solverManager.getBestSolution(tenantId).get();
     }
 
-    public Score bestScore(Long tenantId) throws NoSuchElementException {
+    public Score getBestScore(Long tenantId) throws NoSuchElementException {
         return solverManager.getBestScore(tenantId).get();
     }
 
-    public SolverStatus solverStatus(Long tenantId) throws NoSuchElementException {
+    public SolverStatus getSolverStatus(Long tenantId) throws NoSuchElementException {
         return solverManager.getSolverStatus(tenantId).get();
     }
 }

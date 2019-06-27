@@ -21,8 +21,6 @@ import java.util.NoSuchElementException;
 import org.optaplanner.core.api.score.Score;
 import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution;
 import org.optaplanner.springboottaskassigning.solver.SolverStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,22 +35,18 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/tenants/{tenantId}/solver")
 public class TaskAssigningSolverManagerController {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
     @Autowired
     private TaskAssigningSolverManagerService solverManagerService;
 
     @PostMapping
     public void solve(@PathVariable Long tenantId, @RequestBody TaskAssigningSolution planningProblem) {
-        logger.debug("POST /tenants/{}/solver", tenantId);
         solverManagerService.solve(tenantId, planningProblem);
     }
 
     @GetMapping("/bestSolution")
     public TaskAssigningSolution bestSolution(@PathVariable Long tenantId) {
-        logger.debug("GET /tenants/{}/solver/bestSolution", tenantId);
         try {
-            return solverManagerService.bestSolution(tenantId);
+            return solverManagerService.getBestSolution(tenantId);
         } catch (NoSuchElementException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Tenant (" + tenantId + ") does not have a solver task submitted or solving has not started yet.", e);
@@ -61,9 +55,8 @@ public class TaskAssigningSolverManagerController {
 
     @GetMapping("/bestScore")
     public Score bestScore(@PathVariable Long tenantId) {
-        logger.debug("GET /tenants/{}/solver/bestScore", tenantId);
         try {
-            return solverManagerService.bestScore(tenantId);
+            return solverManagerService.getBestScore(tenantId);
         } catch (NoSuchElementException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Tenant (" + tenantId + ") does not have a solver task submitted or solving has not started yet.", e);
@@ -72,9 +65,8 @@ public class TaskAssigningSolverManagerController {
 
     @GetMapping("/status")
     public SolverStatus solverStatus(@PathVariable Long tenantId) {
-        logger.debug("GET /tenants/{}/solver/status", tenantId);
         try {
-            return solverManagerService.solverStatus(tenantId);
+            return solverManagerService.getSolverStatus(tenantId);
         } catch (NoSuchElementException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Tenant (" + tenantId + ") does not have a solver task submitted or solving has not started yet.", e);
