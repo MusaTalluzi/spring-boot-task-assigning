@@ -28,11 +28,12 @@ public interface SolverManager<Solution_> {
     void solve(Object problemId, Solution_ planningSolution,
                Consumer<Solution_> onBestSolutionChangedEvent, Consumer<Solution_> onSolvingEnded);
 
-    Optional<Solution_> getBestSolution(Object problemId);
+    // TODO add @Nullable annotation for getBestSolution, getBestScore and getSolverStatus
+    Solution_ getBestSolution(Object problemId);
 
-    Optional<Score> getBestScore(Object problemId);
+    Score getBestScore(Object problemId);
 
-    Optional<SolverStatus> getSolverStatus(Object problemId);
+    SolverStatus getSolverStatus(Object problemId);
 
     void addEventListener(Object problemId, SolverEventListener<Solution_> eventListener);
 
