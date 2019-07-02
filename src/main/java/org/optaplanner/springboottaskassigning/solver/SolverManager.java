@@ -16,7 +16,6 @@
 
 package org.optaplanner.springboottaskassigning.solver;
 
-import java.util.Optional;
 import java.util.function.Consumer;
 
 import org.optaplanner.core.api.score.Score;
@@ -37,5 +36,5 @@ public interface SolverManager<Solution_> {
 
     void addEventListener(Object problemId, SolverEventListener<Solution_> eventListener);
 
-    void shutdown() throws InterruptedException;
+    void shutdown();
 }

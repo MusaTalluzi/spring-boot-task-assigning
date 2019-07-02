@@ -101,12 +101,18 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     }
 
     @Override
-    public void shutdown() throws InterruptedException {
+    public void shutdown() {
         logger.info("Shutting down {}.", DefaultSolverManager.class.getName());
         executorService.shutdown();
         Long awaitingDuration = 1L;
-        if (!executorService.awaitTermination(awaitingDuration, TimeUnit.SECONDS)) {
-            logger.info("Still waiting shutdown after {} second, calling shutdownNow().", awaitingDuration);
+        try {
+            if (!executorService.awaitTermination(awaitingDuration, TimeUnit.SECONDS)) {
+                logger.info("Still waiting shutdown after {} second, calling shutdownNow().", awaitingDuration);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("SolverManager thread interrupted while awaiting termination.", e);
+        } finally {
             executorService.shutdownNow();
         }
     }
