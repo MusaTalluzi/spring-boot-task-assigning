@@ -140,7 +140,7 @@ public class TaskAssigningSolverManagerService {
     }
 
     @PreDestroy
-    public void tearDown() throws InterruptedException {
+    public void tearDown() {
         solverManager.shutdown();
     }
 

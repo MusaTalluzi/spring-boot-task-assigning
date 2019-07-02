@@ -38,6 +38,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -113,6 +114,28 @@ public class TaskAssigningSolverManagerControllerTest {
         submitProblemsAndSolveThem(numOfProblems, 10, 4);
     }
 
+    @Test(timeout = 60_000)
+    public void submitSameProblemTwice() throws Exception {
+        TaskAssigningSolution planningProblem =
+                new TaskAssigningGenerator(newTenantId.getAndIncrement()).createTaskAssigningSolution(1, 1);
+        Long tenantId = planningProblem.getTenantId();
+
+        solveProblem(planningProblem, tenantId, status().isOk());
+        solveProblem(planningProblem, tenantId, status().isBadRequest());
+        SolverStatus solverStatus;
+        do { // Wait until solving ends to implement onSolvingEnded event handler before shutdown
+            solverStatus = getSolverStatus(tenantId);
+        } while (!solverStatus.equals(SolverStatus.STOPPED));
+    }
+
+    @Test(timeout = 60_000)
+    public void getNonExistingProblemInfo() throws Exception {
+        Long tenantId = newTenantId.incrementAndGet();
+        mockMvc.perform(get("/tenants/{tenantId}/solver/bestSolution", tenantId)).andExpect(status().isNotFound());
+        mockMvc.perform(get("/tenants/{tenantId}/solver/bestScore", tenantId)).andExpect(status().isNotFound());
+        mockMvc.perform(get("/tenants/{tenantId}/solver/solverStatue", tenantId)).andExpect(status().isNotFound());
+    }
+
     private void submitProblemsAndSolveThem(int problemSize, int taskListSizeBound, int employeeListSizeBound) {
         logger.info("Sumbitting {} problems with taskListSizeBound ({}) and employeeListSizeBound ({}).",
                 problemSize, taskListSizeBound, employeeListSizeBound);
@@ -134,24 +157,13 @@ public class TaskAssigningSolverManagerControllerTest {
     private void submitOneProblemAndSolveIt(int taskListSize, int employeeListSize) throws Exception {
         TaskAssigningSolution planningProblem =
                 new TaskAssigningGenerator(newTenantId.getAndIncrement()).createTaskAssigningSolution(taskListSize, employeeListSize);
-        String planningProblemAsJsonString = objectMapper.writeValueAsString(planningProblem);
         Long tenantId = planningProblem.getTenantId();
 
-        mockMvc.perform(post("/tenants/{tenantId}/solver", tenantId)
-                .content(planningProblemAsJsonString)
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        solveProblem(planningProblem, tenantId, status().isOk());
 
         SolverStatus solverStatus;
         do { // keep trying until solving started
-            String solverStatusAsJsonString = mockMvc.perform(get("/tenants/{tenantId}/solver/status", tenantId)
-                    .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andReturn()
-                    .getResponse()
-                    .getContentAsString();
-            solverStatus = objectMapper.readValue(solverStatusAsJsonString, SolverStatus.class);
+            solverStatus = getSolverStatus(tenantId);
         } while (!solverStatus.equals(SolverStatus.SOLVING));
 
         TaskAssigningSolution solution;
@@ -180,13 +192,28 @@ public class TaskAssigningSolverManagerControllerTest {
                 .andExpect(status().isOk());
 
         do { // Wait until solving ends
-            String solverStatusAsJsonString = mockMvc.perform(get("/tenants/{tenantId}/solver/status", tenantId)
-                    .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andReturn()
-                    .getResponse()
-                    .getContentAsString();
-            solverStatus = objectMapper.readValue(solverStatusAsJsonString, SolverStatus.class);
-        } while (!solverStatus.equals(SolverStatus.SOLVING));
+            solverStatus = getSolverStatus(tenantId);
+        } while (!solverStatus.equals(SolverStatus.STOPPED));
+    }
+
+    private SolverStatus getSolverStatus(Long tenantId) throws Exception {
+        SolverStatus solverStatus;
+        String solverStatusAsJsonString = mockMvc.perform(get("/tenants/{tenantId}/solver/status", tenantId)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        solverStatus = objectMapper.readValue(solverStatusAsJsonString, SolverStatus.class);
+        return solverStatus;
+    }
+
+    private void solveProblem(TaskAssigningSolution planningProblem, Long tenantId, ResultMatcher resultMatcher) throws Exception {
+        String planningProblemAsJsonString = objectMapper.writeValueAsString(planningProblem);
+        mockMvc.perform(post("/tenants/{tenantId}/solver", tenantId)
+                .content(planningProblemAsJsonString)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(resultMatcher);
     }
 }

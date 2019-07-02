@@ -50,12 +50,10 @@ public class SolverTask<Solution_> implements Runnable {
                 // TODO implement this on a separate thread
                 onSolvingEnded.accept(solver.getBestSolution());
             }
-            logger.info("Done");
         } catch (Exception e) {
             // TODO: better handling of exception (using Callable? / ExtendedExecuter with afterExecute() method)
             // TODO propagate exception to SolverManager so it restarts solving for this tenant
             logger.error("Error in SolverTask", e);
-            Thread.currentThread().interrupt();
         }
     }
 
