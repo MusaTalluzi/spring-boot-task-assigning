@@ -47,7 +47,6 @@ public class SolverTask<Solution_> implements Runnable {
             logger.info("Running solverTask for problemId ({}).", problemId);
             solver.solve(planningProblem);
             if (onSolvingEnded != null) {
-                // TODO implement this on a separate thread
                 onSolvingEnded.accept(solver.getBestSolution());
             }
         } catch (Exception e) {
@@ -80,7 +79,6 @@ public class SolverTask<Solution_> implements Runnable {
     }
 
     public void addEventListener(SolverEventListener<Solution_> eventListener) {
-        // TODO implement this on a separate thread
         solver.addEventListener(eventListener);
     }
 }
