@@ -35,7 +35,8 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
 
     public static final String SOLVER_CONFIG = "org/optaplanner/springboottaskassigning/solver/taskAssigningSolverConfig.xml";
 
-    private ExecutorService executorService;
+    private ExecutorService solverExecutorService;
+    private ExecutorService eventHandlerExecutorService;
     private SolverFactory<Solution_> solverFactory;
     private Map<Object, SolverTask<Solution_>> problemIdToSolverTaskMap;
 
@@ -46,7 +47,8 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
         problemIdToSolverTaskMap = new HashMap<>();
         int numAvailableProcessors = Runtime.getRuntime().availableProcessors();
         logger.info("Number of available processors: {}.", numAvailableProcessors);
-        executorService = Executors.newFixedThreadPool(numAvailableProcessors - 2);
+        solverExecutorService = Executors.newFixedThreadPool(numAvailableProcessors - 1);
+        eventHandlerExecutorService = Executors.newSingleThreadExecutor(); // TODO replace with newSingleThreadScheduledExecutor for throttling?
     }
 
     @Override
@@ -57,12 +59,15 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
                 throw new IllegalArgumentException("Problem (" + problemId + ") already exists.");
             }
             SolverTask<Solution_> newSolverTask = new SolverTask<>(problemId, solverFactory.buildSolver(), planningProblem,
-                    onSolvingEnded);
+                    solution_ -> eventHandlerExecutorService.submit(() -> onSolvingEnded.accept(solution_)));
             // TODO implement throttling
             if (onBestSolutionChangedEvent != null) {
-                newSolverTask.addEventListener(bestSolutionChangedEvent -> onBestSolutionChangedEvent.accept(bestSolutionChangedEvent.getNewBestSolution()));
+                newSolverTask.addEventListener(
+                        bestSolutionChangedEvent ->
+                                eventHandlerExecutorService.submit(
+                                        () -> onBestSolutionChangedEvent.accept(bestSolutionChangedEvent.getNewBestSolution())));
             }
-            executorService.submit(newSolverTask);
+            solverExecutorService.submit(newSolverTask);
             problemIdToSolverTaskMap.put(problemId, newSolverTask);
             logger.info("A new solver task was created with problemId ({}).", problemId);
         }
@@ -103,17 +108,17 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     @Override
     public void shutdown() {
         logger.info("Shutting down {}.", DefaultSolverManager.class.getName());
-        executorService.shutdown();
+        solverExecutorService.shutdown();
         Long awaitingDuration = 1L;
         try {
-            if (!executorService.awaitTermination(awaitingDuration, TimeUnit.SECONDS)) {
+            if (!solverExecutorService.awaitTermination(awaitingDuration, TimeUnit.SECONDS)) {
                 logger.info("Still waiting shutdown after {} second, calling shutdownNow().", awaitingDuration);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("SolverManager thread interrupted while awaiting termination.", e);
         } finally {
-            executorService.shutdownNow();
+            solverExecutorService.shutdownNow();
         }
     }
 }
