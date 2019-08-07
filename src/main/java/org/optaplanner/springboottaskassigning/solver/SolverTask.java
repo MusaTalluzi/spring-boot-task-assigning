@@ -16,6 +16,7 @@
 
 package org.optaplanner.springboottaskassigning.solver;
 
+import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 import org.optaplanner.core.api.score.Score;
@@ -24,36 +25,31 @@ import org.optaplanner.core.api.solver.event.SolverEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SolverTask<Solution_> implements Runnable {
+public class SolverTask<Solution_> implements Callable<Solution_> {
 
     private static final Logger logger = LoggerFactory.getLogger(SolverTask.class);
 
     private final Object problemId;
     private Solver<Solution_> solver;
     private Solution_ planningProblem;
-    private Consumer<Solution_> onSolvingEnded;
 
-    public SolverTask(Object problemId, Solver<Solution_> solver, Solution_ planningProblem,
-                      Consumer<Solution_> onSolvingEnded) {
+    public SolverTask(Object problemId, Solver<Solution_> solver, Solution_ planningProblem) {
         this.problemId = problemId;
         this.solver = solver;
         this.planningProblem = planningProblem;
-        this.onSolvingEnded = onSolvingEnded;
     }
 
     @Override
-    public void run() {
+    public Solution_ call() {
         try {
             logger.info("Running solverTask for problemId ({}).", problemId);
             solver.solve(planningProblem);
-            if (onSolvingEnded != null) {
-                onSolvingEnded.accept(solver.getBestSolution());
-            }
         } catch (Exception e) {
             // TODO: better handling of exception (using Callable? / ExtendedExecuter with afterExecute() method)
             // TODO propagate exception to SolverManager so it restarts solving for this tenant
             logger.error("Error in SolverTask", e);
         }
+        return solver.getBestSolution();
     }
 
     public Object getProblemId() {
@@ -80,5 +76,9 @@ public class SolverTask<Solution_> implements Runnable {
 
     public void addEventListener(SolverEventListener<Solution_> eventListener) {
         solver.addEventListener(eventListener);
+    }
+
+    public void stopSolver() {
+        solver.terminateEarly();
     }
 }
