@@ -27,7 +27,7 @@ public interface SolverManager<Solution_> {
     void solve(Object problemId, Solution_ planningSolution,
                Consumer<Solution_> onBestSolutionChangedEvent, Consumer<Solution_> onSolvingEnded);
 
-//    TODO void stopSolver(Object problemId);
+    void stopSolver(Object problemId);
 
     // TODO add @Nullable annotation for getBestSolution, getBestScore and getSolverStatus
     Solution_ getBestSolution(Object problemId);

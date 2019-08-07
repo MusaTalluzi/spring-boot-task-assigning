@@ -17,7 +17,6 @@
 package org.optaplanner.springboottaskassigning.solver;
 
 import java.util.concurrent.Callable;
-import java.util.function.Consumer;
 
 import org.optaplanner.core.api.score.Score;
 import org.optaplanner.core.api.solver.Solver;
@@ -79,6 +78,8 @@ public class SolverTask<Solution_> implements Callable<Solution_> {
     }
 
     public void stopSolver() {
-        solver.terminateEarly();
+        if (!solver.isTerminateEarly()) {
+            solver.terminateEarly();
+        }
     }
 }
