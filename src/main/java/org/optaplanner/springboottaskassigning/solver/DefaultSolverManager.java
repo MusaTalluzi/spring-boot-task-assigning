@@ -83,6 +83,14 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     }
 
     @Override
+    public void stopSolver(Object problemId) {
+        if (!problemIdToSolverTaskMap.containsKey(problemId)) {
+            throw new IllegalArgumentException("Solver (" + problemId + ") does not exist.");
+        }
+        stopSolverTask(problemIdToSolverTaskMap.get(problemId));
+    }
+
+    @Override
     public Solution_ getBestSolution(Object problemId) {
         logger.debug("Getting best solution of problemId ({}).", problemId);
         SolverTask<Solution_> solverTask = problemIdToSolverTaskMap.get(problemId);
@@ -137,15 +145,19 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
 
     private void stopSolvers() {
         for (SolverTask solverTask : problemIdToSolverTaskMap.values()) {
-            solverTask.stopSolver();
-            try {
-                problemIdToCompletableFutureMap.get(solverTask.getProblemId()).get();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException("Error in solver (" + solverTask.getProblemId() + ").", e);
-            } catch (ExecutionException e) {
-                throw new RuntimeException("Error in solver (" + solverTask.getProblemId() + ").", e);
-            }
+            stopSolverTask(solverTask);
+        }
+    }
+
+    private void stopSolverTask(SolverTask solverTask) {
+        solverTask.stopSolver();
+        try {
+            problemIdToCompletableFutureMap.get(solverTask.getProblemId()).get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error in solver (" + solverTask.getProblemId() + ").", e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException("Error in solver (" + solverTask.getProblemId() + ").", e);
         }
     }
 }

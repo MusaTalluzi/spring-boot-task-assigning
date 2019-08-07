@@ -66,6 +66,10 @@ public class DefaultSolverManagerTest {
         assertEquals(solverManager.getSolverStatus(tenantId), SolverStatus.SOLVING);
         assertEquals(solverManager.getBestSolution(tenantId).getTenantId(), tenantId);
         assertTrue(solverManager.getBestScore(tenantId).isSolutionInitialized());
+
+        solverManager.stopSolver(tenantId);
+        assertEquals(SolverStatus.TERMINATING_EARLY, solverManager.getSolverStatus(tenantId));
+        logger.info(String.valueOf(solvingEndedLatch.getCount()));
     }
 
     @Test
