@@ -50,7 +50,7 @@ public class DefaultSolverManagerTest {
     }
 
     @After
-    public void tearDown() throws InterruptedException {
+    public void tearDown() {
         solverManager.shutdown();
     }
 

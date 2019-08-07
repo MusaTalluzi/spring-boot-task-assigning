@@ -16,8 +16,10 @@
 
 package org.optaplanner.springboottaskassigning.solver;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -39,38 +41,45 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     private ExecutorService eventHandlerExecutorService;
     private SolverFactory<Solution_> solverFactory;
     private Map<Object, SolverTask<Solution_>> problemIdToSolverTaskMap;
+    private Map<Object, CompletableFuture<Solution_>> problemIdToCompletableFutureMap;
 
     // TODO SolverManager should be SOLVER_CONFIG agnostic, it should take the solver configuration as a constructor argument
     // TODO i.e. InputStream/File ...
     public DefaultSolverManager() {
         solverFactory = SolverFactory.createFromXmlResource(SOLVER_CONFIG, DefaultSolverManager.class.getClassLoader());
-        problemIdToSolverTaskMap = new HashMap<>();
+        problemIdToSolverTaskMap = new ConcurrentHashMap<>();
+        problemIdToCompletableFutureMap = new ConcurrentHashMap<>();
         int numAvailableProcessors = Runtime.getRuntime().availableProcessors();
         logger.info("Number of available processors: {}.", numAvailableProcessors);
         solverExecutorService = Executors.newFixedThreadPool(numAvailableProcessors - 1);
-        eventHandlerExecutorService = Executors.newSingleThreadExecutor(); // TODO replace with newSingleThreadScheduledExecutor for throttling?
+        eventHandlerExecutorService = Executors.newSingleThreadExecutor();
     }
 
     @Override
-    public void solve(Object problemId, Solution_ planningProblem,
-                      Consumer<Solution_> onBestSolutionChangedEvent, Consumer<Solution_> onSolvingEnded) {
-        synchronized (this) {
-            if (problemIdToSolverTaskMap.containsKey(problemId)) {
-                throw new IllegalArgumentException("Problem (" + problemId + ") already exists.");
-            }
-            SolverTask<Solution_> newSolverTask = new SolverTask<>(problemId, solverFactory.buildSolver(), planningProblem,
-                    solution_ -> eventHandlerExecutorService.submit(() -> onSolvingEnded.accept(solution_)));
-            // TODO implement throttling
-            if (onBestSolutionChangedEvent != null) {
-                newSolverTask.addEventListener(
-                        bestSolutionChangedEvent ->
-                                eventHandlerExecutorService.submit(
-                                        () -> onBestSolutionChangedEvent.accept(bestSolutionChangedEvent.getNewBestSolution())));
-            }
-            solverExecutorService.submit(newSolverTask);
-            problemIdToSolverTaskMap.put(problemId, newSolverTask);
-            logger.info("A new solver task was created with problemId ({}).", problemId);
+    public synchronized void solve(Object problemId, Solution_ planningProblem,
+                                   Consumer<Solution_> onBestSolutionChangedEvent, Consumer<Solution_> onSolvingEnded) {
+        if (problemIdToSolverTaskMap.containsKey(problemId)) {
+            throw new IllegalArgumentException("Problem (" + problemId + ") already exists.");
         }
+        SolverTask<Solution_> newSolverTask = new SolverTask<>(problemId, solverFactory.buildSolver(), planningProblem);
+        // TODO implement throttling
+        if (onBestSolutionChangedEvent != null) {
+            newSolverTask.addEventListener(
+                    bestSolutionChangedEvent ->
+                            eventHandlerExecutorService.submit(
+                                    () -> onBestSolutionChangedEvent.accept(bestSolutionChangedEvent.getNewBestSolution())));
+        }
+
+        CompletableFuture<Solution_> solverFuture = CompletableFuture.supplyAsync(newSolverTask::call, solverExecutorService);
+        solverFuture.handle((solution_, throwable) -> {
+            if (throwable != null) {
+                throw new RuntimeException("Error in handling CompletableFuture of problem (" + problemId + ").", throwable.getCause());
+            }
+            return eventHandlerExecutorService.submit(() -> onSolvingEnded.accept(solution_));
+        });
+        problemIdToSolverTaskMap.put(problemId, newSolverTask);
+        problemIdToCompletableFutureMap.put(problemId, solverFuture);
+        logger.info("A new solver task was created with problemId ({}).", problemId);
     }
 
     @Override
@@ -108,10 +117,13 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     @Override
     public void shutdown() {
         logger.info("Shutting down {}.", DefaultSolverManager.class.getName());
+        stopSolvers();
         solverExecutorService.shutdown();
+        eventHandlerExecutorService.shutdown();
         Long awaitingDuration = 1L;
         try {
-            if (!solverExecutorService.awaitTermination(awaitingDuration, TimeUnit.SECONDS)) {
+            if (!solverExecutorService.awaitTermination(awaitingDuration, TimeUnit.SECONDS)
+                    || !eventHandlerExecutorService.awaitTermination(awaitingDuration, TimeUnit.SECONDS)) {
                 logger.info("Still waiting shutdown after {} second, calling shutdownNow().", awaitingDuration);
             }
         } catch (InterruptedException e) {
@@ -119,6 +131,21 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
             throw new IllegalStateException("SolverManager thread interrupted while awaiting termination.", e);
         } finally {
             solverExecutorService.shutdownNow();
+            eventHandlerExecutorService.shutdownNow();
+        }
+    }
+
+    private void stopSolvers() {
+        for (SolverTask solverTask : problemIdToSolverTaskMap.values()) {
+            solverTask.stopSolver();
+            try {
+                problemIdToCompletableFutureMap.get(solverTask.getProblemId()).get();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Error in solver (" + solverTask.getProblemId() + ").", e);
+            } catch (ExecutionException e) {
+                throw new RuntimeException("Error in solver (" + solverTask.getProblemId() + ").", e);
+            }
         }
     }
 }
