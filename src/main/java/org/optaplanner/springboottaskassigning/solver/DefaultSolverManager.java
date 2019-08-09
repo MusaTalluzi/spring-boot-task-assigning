@@ -70,7 +70,7 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
                                     () -> onBestSolutionChangedEvent.accept(bestSolutionChangedEvent.getNewBestSolution())));
         }
 
-        CompletableFuture<Solution_> solverFuture = CompletableFuture.supplyAsync(newSolverTask::call, solverExecutorService);
+        CompletableFuture<Solution_> solverFuture = CompletableFuture.supplyAsync(newSolverTask::startSolving, solverExecutorService);
         solverFuture.handle((solution_, throwable) -> {
             if (throwable != null) {
                 throw new RuntimeException("Error in handling CompletableFuture of problem (" + problemId + ").", throwable.getCause());
@@ -151,13 +151,6 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
 
     private void stopSolverTask(SolverTask solverTask) {
         solverTask.stopSolver();
-        try {
-            problemIdToCompletableFutureMap.get(solverTask.getProblemId()).get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Error in solver (" + solverTask.getProblemId() + ").", e);
-        } catch (ExecutionException e) {
-            throw new RuntimeException("Error in solver (" + solverTask.getProblemId() + ").", e);
-        }
+        // No need to call solverFuture.get() to propagate exceptions since they are handled in solve() -> solverFuture.handle()
     }
 }

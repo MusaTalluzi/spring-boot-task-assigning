@@ -16,15 +16,13 @@
 
 package org.optaplanner.springboottaskassigning.solver;
 
-import java.util.concurrent.Callable;
-
 import org.optaplanner.core.api.score.Score;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.event.SolverEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SolverTask<Solution_> implements Callable<Solution_> {
+public class SolverTask<Solution_> {
 
     private static final Logger logger = LoggerFactory.getLogger(SolverTask.class);
 
@@ -38,17 +36,9 @@ public class SolverTask<Solution_> implements Callable<Solution_> {
         this.planningProblem = planningProblem;
     }
 
-    @Override
-    public Solution_ call() {
-        try {
-            logger.info("Running solverTask for problemId ({}).", problemId);
-            solver.solve(planningProblem);
-        } catch (Exception e) {
-            // TODO: better handling of exception (using Callable? / ExtendedExecuter with afterExecute() method)
-            // TODO propagate exception to SolverManager so it restarts solving for this tenant
-            logger.error("Error in SolverTask", e);
-        }
-        return solver.getBestSolution();
+    public Solution_ startSolving() {
+        logger.info("Running solverTask for problemId ({}).", problemId);
+        return solver.solve(planningProblem);
     }
 
     public Object getProblemId() {
