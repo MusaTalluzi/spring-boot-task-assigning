@@ -19,7 +19,6 @@ package org.optaplanner.springboottaskassigning.solver;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -41,14 +40,12 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     private ExecutorService eventHandlerExecutorService;
     private SolverFactory<Solution_> solverFactory;
     private Map<Object, SolverTask<Solution_>> problemIdToSolverTaskMap;
-    private Map<Object, CompletableFuture<Solution_>> problemIdToCompletableFutureMap;
 
     // TODO SolverManager should be SOLVER_CONFIG agnostic, it should take the solver configuration as a constructor argument
     // TODO i.e. InputStream/File ...
     public DefaultSolverManager() {
         solverFactory = SolverFactory.createFromXmlResource(SOLVER_CONFIG, DefaultSolverManager.class.getClassLoader());
         problemIdToSolverTaskMap = new ConcurrentHashMap<>();
-        problemIdToCompletableFutureMap = new ConcurrentHashMap<>();
         int numAvailableProcessors = Runtime.getRuntime().availableProcessors();
         logger.info("Number of available processors: {}.", numAvailableProcessors);
         solverExecutorService = Executors.newFixedThreadPool(numAvailableProcessors - 1);
@@ -78,7 +75,6 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
             return eventHandlerExecutorService.submit(() -> onSolvingEnded.accept(solution_));
         });
         problemIdToSolverTaskMap.put(problemId, newSolverTask);
-        problemIdToCompletableFutureMap.put(problemId, solverFuture);
         logger.info("A new solver task was created with problemId ({}).", problemId);
     }
 
