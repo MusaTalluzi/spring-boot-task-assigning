@@ -53,7 +53,7 @@ public class SolverTask<Solution_> {
         return solver.getBestScore();
     }
 
-    public SolverStatus getSolverStatus() {
+    public synchronized SolverStatus getSolverStatus() {
         if (solver.isTerminateEarly()) {
             return SolverStatus.TERMINATING_EARLY;
         } else if (solver.isSolving()) {
@@ -68,8 +68,6 @@ public class SolverTask<Solution_> {
     }
 
     public void stopSolver() {
-        if (!solver.isTerminateEarly()) {
-            solver.terminateEarly();
-        }
+        solver.terminateEarly();
     }
 }
