@@ -16,7 +16,9 @@
 
 package org.optaplanner.springboottaskassigning.solver;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -29,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -68,7 +71,7 @@ public class DefaultSolverManagerTest {
         assertTrue(solverManager.getBestScore(tenantId).isSolutionInitialized());
 
         solverManager.stopSolver(tenantId);
-        assertEquals(SolverStatus.TERMINATING_EARLY, solverManager.getSolverStatus(tenantId));
+        assertEquals(SolverStatus.TERMINATED_EARLY, solverManager.getSolverStatus(tenantId));
         logger.info(String.valueOf(solvingEndedLatch.getCount()));
     }
 
@@ -110,5 +113,46 @@ public class DefaultSolverManagerTest {
         solvingEndedLatch.await(60, TimeUnit.SECONDS);
         assertEquals(onBestSolutionChangedEventInvocationCount.get(), bestSolutionChangedEventCount.get());
         logger.info("Number of bestSolutionChangedEvents: {}.", bestSolutionChangedEventCount.get());
+    }
+
+    // ****************************
+    // Exception handling tests
+    // ****************************
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldNotStartTwoSolverTasksWithSameProblemId() {
+        TaskAssigningSolution problem =
+                new TaskAssigningGenerator(tenantId).createTaskAssigningSolution(1, 1);
+        solverManager.solve(tenantId, problem, null, null);
+        solverManager.solve(tenantId, problem, null, null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldPropagateExceptionsFromSolverThread() throws Throwable {
+        // Add a problem with null PlanningId
+        TaskAssigningSolution problem =
+                new TaskAssigningGenerator(tenantId).createTaskAssigningSolution(1, 1);
+        problem.setTaskList(null);
+        CompletableFuture<TaskAssigningSolution> solverFuture
+                = solverManager.solve(tenantId, problem, null, null).toCompletableFuture();
+        try {
+            solverFuture.get(10, TimeUnit.SECONDS);
+        } catch (ExecutionException e) {
+            throw e.getCause();
+        }
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldNotStopASolverThatHasNotBeenSubmitted() {
+        solverManager.stopSolver(tenantId);
+    }
+
+    @Test
+    public void shouldNotGetMetadataOfSolverThatHasNotBeenSubmitted() {
+        assertNull(solverManager.getBestSolution(tenantId));
+        assertNull(solverManager.getBestScore(tenantId));
+        assertNull(solverManager.getSolverStatus(tenantId));
+        assertFalse(solverManager.addEventListener(tenantId, bestSolutionChangedEvent -> {
+        }));
     }
 }

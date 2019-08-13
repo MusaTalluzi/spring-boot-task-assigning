@@ -16,6 +16,7 @@
 
 package org.optaplanner.springboottaskassigning.solver;
 
+import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
 import org.optaplanner.core.api.score.Score;
@@ -23,20 +24,18 @@ import org.optaplanner.core.api.solver.event.SolverEventListener;
 
 public interface SolverManager<Solution_> {
 
-    // FIXME CRITICAL BUG: iterate over planning solution entities and set tenantId, or induce it from solution.getProblemId()
-    void solve(Object problemId, Solution_ planningSolution,
-               Consumer<Solution_> onBestSolutionChangedEvent, Consumer<Solution_> onSolvingEnded);
+    CompletionStage<Solution_> solve(Object problemId, Solution_ planningSolution,
+                                     Consumer<Solution_> onBestSolutionChangedEvent, Consumer<Solution_> onSolvingEnded);
 
     void stopSolver(Object problemId);
 
-    // TODO add @Nullable annotation for getBestSolution, getBestScore and getSolverStatus
     Solution_ getBestSolution(Object problemId);
 
     Score getBestScore(Object problemId);
 
     SolverStatus getSolverStatus(Object problemId);
 
-    void addEventListener(Object problemId, SolverEventListener<Solution_> eventListener);
+    boolean addEventListener(Object problemId, SolverEventListener<Solution_> eventListener);
 
     void shutdown();
 }
