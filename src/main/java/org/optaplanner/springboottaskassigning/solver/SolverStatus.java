@@ -19,5 +19,5 @@ package org.optaplanner.springboottaskassigning.solver;
 public enum SolverStatus {
     SOLVING,
     STOPPED,
-    TERMINATING_EARLY
+    TERMINATED_EARLY
 }

@@ -55,7 +55,7 @@ public class SolverTask<Solution_> {
 
     public synchronized SolverStatus getSolverStatus() {
         if (solver.isTerminateEarly()) {
-            return SolverStatus.TERMINATING_EARLY;
+            return SolverStatus.TERMINATED_EARLY;
         } else if (solver.isSolving()) {
             return SolverStatus.SOLVING;
         } else {

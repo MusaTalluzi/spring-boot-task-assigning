@@ -53,12 +53,19 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     }
 
     @Override
-    public synchronized void solve(Object problemId, Solution_ planningProblem,
-                                   Consumer<Solution_> onBestSolutionChangedEvent, Consumer<Solution_> onSolvingEnded) {
-        if (problemIdToSolverTaskMap.containsKey(problemId)) {
-            throw new IllegalArgumentException("Problem (" + problemId + ") already exists.");
+    public CompletableFuture<Solution_> solve(Object problemId, Solution_ planningProblem,
+                                              Consumer<Solution_> onBestSolutionChangedEvent, Consumer<Solution_> onSolvingEnded) {
+        SolverTask<Solution_> newSolverTask;
+        synchronized (this) {
+            if (problemIdToSolverTaskMap.containsKey(problemId)) {
+                // TODO throw an exception or just log an error and return.
+                throw new IllegalArgumentException("Problem (" + problemId + ") already exists.");
+            }
+            newSolverTask = new SolverTask<>(problemId, solverFactory.buildSolver(), planningProblem);
+            problemIdToSolverTaskMap.put(problemId, newSolverTask);
+            logger.info("A new solver task was created with problemId ({}).", problemId);
         }
-        SolverTask<Solution_> newSolverTask = new SolverTask<>(problemId, solverFactory.buildSolver(), planningProblem);
+
         // TODO implement throttling
         if (onBestSolutionChangedEvent != null) {
             newSolverTask.addEventListener(
@@ -70,25 +77,30 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
         CompletableFuture<Solution_> solverFuture = CompletableFuture.supplyAsync(newSolverTask::startSolving, solverExecutorService);
         solverFuture.handle((solution_, throwable) -> {
             if (throwable != null) {
-                throw new RuntimeException("Error in handling CompletableFuture of problem (" + problemId + ").", throwable.getCause());
+                logger.error("Exception while solving problem (" + problemId + ").", throwable.getCause());
+                return null;
+            } else {
+                return eventHandlerExecutorService.submit(() -> onSolvingEnded.accept(solution_));
             }
-            return eventHandlerExecutorService.submit(() -> onSolvingEnded.accept(solution_));
         });
-        problemIdToSolverTaskMap.put(problemId, newSolverTask);
-        logger.info("A new solver task was created with problemId ({}).", problemId);
+        return solverFuture;
     }
 
     @Override
     public void stopSolver(Object problemId) {
+        logger.debug("Stopping solver of problemId ({}).", problemId);
         if (!problemIdToSolverTaskMap.containsKey(problemId)) {
-            throw new IllegalArgumentException("Solver (" + problemId + ") does not exist.");
+            throw new IllegalArgumentException("Problem (" + problemId + ") was not submitted.");
         }
-        stopSolverTask(problemIdToSolverTaskMap.get(problemId));
+        problemIdToSolverTaskMap.get(problemId).stopSolver();
     }
 
     @Override
     public Solution_ getBestSolution(Object problemId) {
         logger.debug("Getting best solution of problemId ({}).", problemId);
+        if (!problemIdToSolverTaskMap.containsKey(problemId)) {
+            logger.error("Problem (" + problemId + ") was not submitted.");
+        }
         SolverTask<Solution_> solverTask = problemIdToSolverTaskMap.get(problemId);
         return solverTask == null ? null : solverTask.getBestSolution();
     }
@@ -96,6 +108,9 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     @Override
     public Score getBestScore(Object problemId) {
         logger.debug("Getting best score of problemId ({}).", problemId);
+        if (!problemIdToSolverTaskMap.containsKey(problemId)) {
+            logger.error("Problem (" + problemId + ") was not submitted.");
+        }
         SolverTask<Solution_> solverTask = problemIdToSolverTaskMap.get(problemId);
         return solverTask == null ? null : solverTask.getBestScore();
     }
@@ -103,19 +118,23 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     @Override
     public SolverStatus getSolverStatus(Object problemId) {
         logger.debug("Getting solver status of problemId ({}).", problemId);
+        if (!problemIdToSolverTaskMap.containsKey(problemId)) {
+            logger.error("Problem (" + problemId + ") was not submitted.");
+        }
         SolverTask<Solution_> solverTask = problemIdToSolverTaskMap.get(problemId);
         return solverTask == null ? null : solverTask.getSolverStatus();
     }
 
     @Override
-    public void addEventListener(Object problemId, SolverEventListener<Solution_> eventListener) {
+    public boolean addEventListener(Object problemId, SolverEventListener<Solution_> eventListener) {
         logger.debug("Adding an event listener for problemId ({}).", problemId);
         SolverTask<Solution_> solverTask = problemIdToSolverTaskMap.get(problemId);
-        if (solverTask != null) {
-            solverTask.addEventListener(eventListener);
-        } else {
-            logger.error("Problem ({}) does not have a SolverTask submitted.", problemId);
+        if (solverTask == null) {
+            logger.error("Problem (" + problemId + ") was not submitted.");
+            return false;
         }
+        solverTask.addEventListener(eventListener);
+        return true;
     }
 
     @Override
@@ -141,12 +160,7 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
 
     private void stopSolvers() {
         for (SolverTask solverTask : problemIdToSolverTaskMap.values()) {
-            stopSolverTask(solverTask);
+            solverTask.stopSolver();
         }
-    }
-
-    private void stopSolverTask(SolverTask solverTask) {
-        solverTask.stopSolver();
-        // No need to call solverFuture.get() to propagate exceptions since they are handled in solve() -> solverFuture.handle()
     }
 }
