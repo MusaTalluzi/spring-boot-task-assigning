@@ -21,7 +21,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import org.optaplanner.core.api.score.Score;
@@ -156,22 +155,10 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     @Override
     public void shutdown() {
         logger.info("Shutting down {}.", DefaultSolverManager.class.getName());
+        // Shutting down executor services before stopping solvers so that queued up solver tasks don't start solving.
+        solverExecutorService.shutdownNow();
+        eventHandlerExecutorService.shutdownNow();
         stopSolvers();
-        solverExecutorService.shutdown();
-        eventHandlerExecutorService.shutdown();
-        Long awaitingDuration = 1L;
-        try {
-            if (!solverExecutorService.awaitTermination(awaitingDuration, TimeUnit.SECONDS)
-                    || !eventHandlerExecutorService.awaitTermination(awaitingDuration, TimeUnit.SECONDS)) {
-                logger.info("Still waiting shutdown after {} second, calling shutdownNow().", awaitingDuration);
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("SolverManager thread interrupted while awaiting termination.", e);
-        } finally {
-            solverExecutorService.shutdownNow();
-            eventHandlerExecutorService.shutdownNow();
-        }
     }
 
     private void stopSolvers() {
