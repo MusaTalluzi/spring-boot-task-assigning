@@ -115,6 +115,23 @@ public class DefaultSolverManagerTest {
         logger.info("Number of bestSolutionChangedEvents: {}.", bestSolutionChangedEventCount.get());
     }
 
+    @Test
+    public void shutdownShouldStopAllSolvers() {
+        int[] problemIds = new int[Runtime.getRuntime().availableProcessors() * 3];
+        for (int i = 0; i < problemIds.length; i++) {
+            problemIds[i] = i;
+        }
+        Arrays.stream(problemIds)
+                .forEach(problemId -> {
+                    TaskAssigningSolution problem =
+                            new TaskAssigningGenerator(tenantId).createTaskAssigningSolution(1, 1);
+                    solverManager.solve(problemId, problem, null, null);
+                });
+        solverManager.shutdown(); // Calling it right away ensures there are still some tasks that haven't started executing
+        Arrays.stream(problemIds)
+                .forEach(problemId -> assertEquals(SolverStatus.TERMINATED_EARLY, solverManager.getSolverStatus(problemId)));
+    }
+
     // ****************************
     // Exception handling tests
     // ****************************
