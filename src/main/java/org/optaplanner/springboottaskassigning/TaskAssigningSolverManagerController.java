@@ -39,7 +39,7 @@ public class TaskAssigningSolverManagerController {
     @PostMapping
     public void solve(@PathVariable Long problemId, @RequestBody TaskAssigningSolution planningProblem) {
         if (!solverManagerService.solve(problemId, planningProblem)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Problem ( " + problemId + ") already exists.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Problem (" + problemId + ") already exists.");
         }
     }
 

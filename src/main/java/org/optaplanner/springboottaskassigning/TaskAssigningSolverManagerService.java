@@ -67,6 +67,7 @@ public class TaskAssigningSolverManagerService {
             } catch (Exception e) {
                 logger.error("Error in onBestSolutionChangedEvent listener", e);
                 // FIXME the exception is eaten and not propagated properly, duplicate by using older version of optaplanner-persistence-jpa
+                // reason: this method is executed using eventHandlerExecutorService.submit()
                 throw new RuntimeException(e);
             }
         };
@@ -145,7 +146,7 @@ public class TaskAssigningSolverManagerService {
     }
 
     public boolean solve(Long problemId, TaskAssigningSolution planningProblem) {
-        if (taskAssigningSolutionRepository.existsByTenantId(problemId)) {
+        if (solverManager.problemSubmitted(problemId)) {
             return false;
         }
         taskAssigningSolutionRepository.save(planningProblem);

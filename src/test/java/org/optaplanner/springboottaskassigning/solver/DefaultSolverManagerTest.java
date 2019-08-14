@@ -16,11 +16,11 @@
 
 package org.optaplanner.springboottaskassigning.solver;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.After;
 import org.junit.Before;
@@ -127,19 +127,17 @@ public class DefaultSolverManagerTest {
         solverManager.solve(tenantId, problem, null, null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void shouldPropagateExceptionsFromSolverThread() throws Throwable {
-        // Add a problem with null PlanningId
         TaskAssigningSolution problem =
                 new TaskAssigningGenerator(tenantId).createTaskAssigningSolution(1, 1);
-        problem.setTaskList(null);
-        CompletableFuture<TaskAssigningSolution> solverFuture
-                = solverManager.solve(tenantId, problem, null, null).toCompletableFuture();
-        try {
-            solverFuture.get(10, TimeUnit.SECONDS);
-        } catch (ExecutionException e) {
-            throw e.getCause();
-        }
+        problem.setTaskList(null); // So that solver thread throws IllegalArgumentException
+        final AtomicReference<Throwable> solverException = new AtomicReference<>();
+        solverManager.solve(tenantId, problem, null,
+                solution -> solvingEndedLatch.countDown(),
+                solverException::set);
+        solvingEndedLatch.await(10, TimeUnit.SECONDS);
+        assertEquals(IllegalArgumentException.class, solverException.get().getClass());
     }
 
     @Test(expected = IllegalArgumentException.class)

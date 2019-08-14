@@ -53,8 +53,19 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     }
 
     @Override
-    public CompletableFuture<Solution_> solve(Object problemId, Solution_ planningProblem,
-                                              Consumer<Solution_> onBestSolutionChangedEvent, Consumer<Solution_> onSolvingEnded) {
+    public void solve(Object problemId,
+                      Solution_ planningProblem,
+                      Consumer<Solution_> onBestSolutionChangedEvent,
+                      Consumer<Solution_> onSolvingEnded) {
+        solve(problemId, planningProblem, onBestSolutionChangedEvent, onSolvingEnded, null);
+    }
+
+    @Override
+    public void solve(Object problemId,
+                      Solution_ planningProblem,
+                      Consumer<Solution_> onBestSolutionChangedEvent,
+                      Consumer<Solution_> onSolvingEnded,
+                      Consumer<Throwable> onException) {
         SolverTask<Solution_> newSolverTask;
         synchronized (this) {
             if (problemIdToSolverTaskMap.containsKey(problemId)) {
@@ -78,12 +89,12 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
         solverFuture.handle((solution_, throwable) -> {
             if (throwable != null) {
                 logger.error("Exception while solving problem (" + problemId + ").", throwable.getCause());
-                return null;
-            } else {
-                return eventHandlerExecutorService.submit(() -> onSolvingEnded.accept(solution_));
+                if (onException != null) {
+                    eventHandlerExecutorService.submit(() -> onException.accept(throwable.getCause()));
+                }
             }
+            return eventHandlerExecutorService.submit(() -> onSolvingEnded.accept(solution_));
         });
-        return solverFuture;
     }
 
     @Override
@@ -93,6 +104,11 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
             throw new IllegalArgumentException("Problem (" + problemId + ") was not submitted.");
         }
         problemIdToSolverTaskMap.get(problemId).stopSolver();
+    }
+
+    @Override
+    public boolean problemSubmitted(Object problemId) {
+        return problemIdToSolverTaskMap.containsKey(problemId);
     }
 
     @Override

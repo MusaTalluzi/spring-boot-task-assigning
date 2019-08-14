@@ -16,7 +16,6 @@
 
 package org.optaplanner.springboottaskassigning.solver;
 
-import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
 import org.optaplanner.core.api.score.Score;
@@ -24,10 +23,20 @@ import org.optaplanner.core.api.solver.event.SolverEventListener;
 
 public interface SolverManager<Solution_> {
 
-    CompletionStage<Solution_> solve(Object problemId, Solution_ planningSolution,
-                                     Consumer<Solution_> onBestSolutionChangedEvent, Consumer<Solution_> onSolvingEnded);
+    void solve(Object problemId,
+               Solution_ planningProblem,
+               Consumer<Solution_> onBestSolutionChangedEvent,
+               Consumer<Solution_> onSolvingEnded);
+
+    void solve(Object problemId,
+               Solution_ planningProblem,
+               Consumer<Solution_> onBestSolutionChangedEvent,
+               Consumer<Solution_> onSolvingEnded,
+               Consumer<Throwable> onException);
 
     void stopSolver(Object problemId);
+
+    boolean problemSubmitted(Object problemId);
 
     Solution_ getBestSolution(Object problemId);
 
