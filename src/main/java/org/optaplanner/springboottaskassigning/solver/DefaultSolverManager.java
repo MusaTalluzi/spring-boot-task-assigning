@@ -67,8 +67,7 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
                       Consumer<Throwable> onException) {
         SolverTask<Solution_> newSolverTask;
         synchronized (this) {
-            if (problemIdToSolverTaskMap.containsKey(problemId)) {
-                // TODO throw an exception or just log an error and return.
+            if (isProblemSubmitted(problemId)) {
                 throw new IllegalArgumentException("Problem (" + problemId + ") already exists.");
             }
             newSolverTask = new SolverTask<>(problemId, solverFactory.buildSolver(), planningProblem);
@@ -99,54 +98,72 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     @Override
     public void stopSolver(Object problemId) {
         logger.debug("Stopping solver of problemId ({}).", problemId);
-        if (!problemIdToSolverTaskMap.containsKey(problemId)) {
-            throw new IllegalArgumentException("Problem (" + problemId + ") was not submitted.");
+        SolverTask<Solution_> solverTask;
+        synchronized (this) {
+            if (!isProblemSubmitted(problemId)) {
+                throw new IllegalArgumentException("Problem (" + problemId + ") was not submitted.");
+            }
+            solverTask = problemIdToSolverTaskMap.get(problemId);
         }
-        problemIdToSolverTaskMap.get(problemId).stopSolver();
+        if (solverTask != null) {
+            solverTask.stopSolver();
+        }
     }
 
     @Override
-    public boolean problemSubmitted(Object problemId) {
+    public boolean isProblemSubmitted(Object problemId) {
         return problemIdToSolverTaskMap.containsKey(problemId);
     }
 
     @Override
     public Solution_ getBestSolution(Object problemId) {
         logger.debug("Getting best solution of problemId ({}).", problemId);
-        if (!problemIdToSolverTaskMap.containsKey(problemId)) {
-            logger.error("Problem (" + problemId + ") was not submitted.");
+        SolverTask<Solution_> solverTask;
+        synchronized (this) {
+            if (!isProblemSubmitted(problemId)) {
+                logger.error("Problem (" + problemId + ") was not submitted.");
+            }
+            solverTask = problemIdToSolverTaskMap.get(problemId);
         }
-        SolverTask<Solution_> solverTask = problemIdToSolverTaskMap.get(problemId);
         return solverTask == null ? null : solverTask.getBestSolution();
     }
 
     @Override
     public Score getBestScore(Object problemId) {
         logger.debug("Getting best score of problemId ({}).", problemId);
-        if (!problemIdToSolverTaskMap.containsKey(problemId)) {
-            logger.error("Problem (" + problemId + ") was not submitted.");
+        SolverTask<Solution_> solverTask;
+        synchronized (this) {
+            if (!isProblemSubmitted(problemId)) {
+                logger.error("Problem (" + problemId + ") was not submitted.");
+            }
+            solverTask = problemIdToSolverTaskMap.get(problemId);
         }
-        SolverTask<Solution_> solverTask = problemIdToSolverTaskMap.get(problemId);
         return solverTask == null ? null : solverTask.getBestScore();
     }
 
     @Override
     public SolverStatus getSolverStatus(Object problemId) {
         logger.debug("Getting solver status of problemId ({}).", problemId);
-        if (!problemIdToSolverTaskMap.containsKey(problemId)) {
-            logger.error("Problem (" + problemId + ") was not submitted.");
+        SolverTask<Solution_> solverTask;
+        synchronized (this) {
+            if (!isProblemSubmitted(problemId)) {
+                logger.error("Problem (" + problemId + ") was not submitted.");
+            }
+            solverTask = problemIdToSolverTaskMap.get(problemId);
         }
-        SolverTask<Solution_> solverTask = problemIdToSolverTaskMap.get(problemId);
         return solverTask == null ? null : solverTask.getSolverStatus();
     }
 
     @Override
     public boolean addEventListener(Object problemId, SolverEventListener<Solution_> eventListener) {
         logger.debug("Adding an event listener for problemId ({}).", problemId);
-        SolverTask<Solution_> solverTask = problemIdToSolverTaskMap.get(problemId);
-        if (solverTask == null) {
-            logger.error("Problem (" + problemId + ") was not submitted.");
-            return false;
+        SolverTask<Solution_> solverTask;
+        synchronized (this) {
+            solverTask = problemIdToSolverTaskMap.get(problemId);
+            if (solverTask == null) {
+                logger.error("Problem (" + problemId + ") was not submitted.");
+                return false;
+            }
         }
         solverTask.addEventListener(eventListener);
         return true;
@@ -156,9 +173,10 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     public void shutdown() {
         logger.info("Shutting down {}.", DefaultSolverManager.class.getName());
         // Shutting down executor services before stopping solvers so that queued up solver tasks don't start solving.
+        // TODO consider using org.optaplanner.core.impl.solver.thread.ThreadUtils
         solverExecutorService.shutdownNow();
         eventHandlerExecutorService.shutdownNow();
-        stopSolvers();
+        stopSolvers(); // TODO is this necessary?
     }
 
     private void stopSolvers() {
