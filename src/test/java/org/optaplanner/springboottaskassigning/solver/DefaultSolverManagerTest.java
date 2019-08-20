@@ -127,7 +127,7 @@ public class DefaultSolverManagerTest {
                             new TaskAssigningGenerator(tenantId).createTaskAssigningSolution(1, 1);
                     solverManager.solve(problemId, problem, null, null);
                 });
-        solverManager.shutdown(); // Calling it right away ensures there are still some tasks that haven't started executing
+        solverManager.shutdown(); // Calling it right away while some tasks might be on the queue
         Arrays.stream(problemIds)
                 .forEach(problemId -> assertEquals(SolverStatus.TERMINATED_EARLY, solverManager.getSolverStatus(problemId)));
     }
@@ -136,12 +136,16 @@ public class DefaultSolverManagerTest {
     // Exception handling tests
     // ****************************
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void shouldNotStartTwoSolverTasksWithSameProblemId() {
         TaskAssigningSolution problem =
                 new TaskAssigningGenerator(tenantId).createTaskAssigningSolution(1, 1);
         solverManager.solve(tenantId, problem, null, null);
-        solverManager.solve(tenantId, problem, null, null);
+        try {
+            solverManager.solve(tenantId, problem, null, null);
+        } catch (IllegalArgumentException e) {
+            assertEquals("Problem (" + tenantId + ") already exists.", e.getMessage());
+        }
     }
 
     @Test
@@ -157,9 +161,13 @@ public class DefaultSolverManagerTest {
         assertEquals(IllegalArgumentException.class, solverException.get().getClass());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void shouldNotStopASolverThatHasNotBeenSubmitted() {
-        solverManager.stopSolver(tenantId);
+        try {
+            solverManager.stopSolver(tenantId);
+        } catch (IllegalArgumentException e) {
+            assertEquals("Problem (" + tenantId + ") was not submitted.", e.getMessage());
+        }
     }
 
     @Test

@@ -36,7 +36,7 @@ public interface SolverManager<Solution_> {
 
     void stopSolver(Object problemId);
 
-    boolean problemSubmitted(Object problemId);
+    boolean isProblemSubmitted(Object problemId);
 
     Solution_ getBestSolution(Object problemId);
 

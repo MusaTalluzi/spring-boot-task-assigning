@@ -146,7 +146,7 @@ public class TaskAssigningSolverManagerService {
     }
 
     public boolean solve(Long problemId, TaskAssigningSolution planningProblem) {
-        if (solverManager.problemSubmitted(problemId)) {
+        if (solverManager.isProblemSubmitted(problemId)) {
             return false;
         }
         taskAssigningSolutionRepository.save(planningProblem);
