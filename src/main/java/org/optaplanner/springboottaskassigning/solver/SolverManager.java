@@ -19,7 +19,6 @@ package org.optaplanner.springboottaskassigning.solver;
 import java.util.function.Consumer;
 
 import org.optaplanner.core.api.score.Score;
-import org.optaplanner.core.api.solver.event.SolverEventListener;
 
 public interface SolverManager<Solution_> {
 
@@ -43,8 +42,6 @@ public interface SolverManager<Solution_> {
     Score getBestScore(Object problemId);
 
     SolverStatus getSolverStatus(Object problemId);
-
-    boolean addEventListener(Object problemId, SolverEventListener<Solution_> eventListener);
 
     void shutdown();
 }

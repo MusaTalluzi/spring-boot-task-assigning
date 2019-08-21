@@ -31,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -100,18 +99,16 @@ public class DefaultSolverManagerTest {
     }
 
     @Test
-    public void onBestSolutionChangedCalledEveryTimeASolutionIsChanged() throws InterruptedException {
+    public void onBestSolutionChangedCalledWhenASolutionIsChanged() throws InterruptedException {
         AtomicInteger bestSolutionChangedEventCount = new AtomicInteger(0);
-        AtomicInteger onBestSolutionChangedEventInvocationCount = new AtomicInteger(0);
         TaskAssigningSolution problem =
                 new TaskAssigningGenerator(tenantId).createTaskAssigningSolution(24, 8);
         solverManager.solve(tenantId, problem,
                 taskAssigningSolution -> bestSolutionChangedEventCount.incrementAndGet(),
                 taskAssigningSolution -> solvingEndedLatch.countDown());
 
-        solverManager.addEventListener(tenantId, bestSolutionChangedEvent -> onBestSolutionChangedEventInvocationCount.incrementAndGet());
         solvingEndedLatch.await(60, TimeUnit.SECONDS);
-        assertEquals(onBestSolutionChangedEventInvocationCount.get(), bestSolutionChangedEventCount.get());
+        assertTrue(bestSolutionChangedEventCount.get() > 0);
         logger.info("Number of bestSolutionChangedEvents: {}.", bestSolutionChangedEventCount.get());
     }
 
@@ -175,7 +172,5 @@ public class DefaultSolverManagerTest {
         assertNull(solverManager.getBestSolution(tenantId));
         assertNull(solverManager.getBestScore(tenantId));
         assertNull(solverManager.getSolverStatus(tenantId));
-        assertFalse(solverManager.addEventListener(tenantId, bestSolutionChangedEvent -> {
-        }));
     }
 }
