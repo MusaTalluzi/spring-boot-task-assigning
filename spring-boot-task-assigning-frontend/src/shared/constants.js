@@ -8,5 +8,37 @@ export default {
     month: 0,
     day: 1,
   },
-  BEST_SOLUTION_CLASS: 'org.kie.server.examples.optaplanner.taskassignment.kjar.domain.TaskAssigningSolution',
 };
+
+export const problems = [
+  {
+    id: 0,
+    taskLiseSize: 1,
+    employeeListSize: 1,
+    label: '1 task 1 employee',
+  },
+  {
+    id: 1,
+    taskLiseSize: 10,
+    employeeListSize: 4,
+    label: '10 tasks 4 employees',
+  },
+  {
+    id: 2,
+    taskLiseSize: 20,
+    employeeListSize: 4,
+    label: '20 tasks 4 employees',
+  },
+  {
+    id: 3,
+    taskLiseSize: 40,
+    employeeListSize: 10,
+    label: '40 tasks 10 employees',
+  },
+  {
+    id: 4,
+    taskLiseSize: 100,
+    employeeListSize: 16,
+    label: '100 tasks 16 employees',
+  },
+];

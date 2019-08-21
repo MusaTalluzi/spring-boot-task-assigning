@@ -5,7 +5,7 @@ import {
 import PropTypes from 'prop-types';
 
 import constants from '../shared/constants';
-import { submitProblemFactChange, isEveryProplemFactChangeProcessed } from '../shared/kie-server-client';
+// import { submitProblemFactChange, isEveryProplemFactChangeProcessed } from '../shared/springboot-server-client';
 
 class AutoProduceConsume extends Component {
   constructor(props) {
@@ -35,19 +35,19 @@ class AutoProduceConsume extends Component {
 
   handleProduceRateChange = produceRate => this.setState({ produceRate });
 
-  pinPastTasks = (consumedTime) => {
-    const body = {
-      'problem-fact-change': {
-        $class: 'TaPinTaskProblemFactChange',
-        consumedTime,
-      },
-    };
-    const successMsg = `Pinned tasks that start before ${consumedTime} successfully.`;
+  // pinPastTasks = (consumedTime) => {
+  //   const body = {
+  //     'problem-fact-change': {
+  //       $class: 'TaPinTaskProblemFactChange',
+  //       consumedTime,
+  //     },
+  //   };
+  //   const successMsg = `Pinned tasks that start before ${consumedTime} successfully.`;
 
-    // submitProblemFactChange(
-    //   body, successMsg, this.props.container.containerId, this.props.solver.id,
-    // );
-  };
+  //   submitProblemFactChange(
+  //     body, successMsg, this.props.container.containerId, this.props.solver.id,
+  //   );
+  // };
 
   randomInt = n => Math.floor(Math.random() * n);
 
@@ -192,7 +192,7 @@ AutoProduceConsume.propTypes = {
   tasks: PropTypes.instanceOf(Array).isRequired,
   taskTypes: PropTypes.instanceOf(Array).isRequired,
   customers: PropTypes.instanceOf(Array).isRequired,
-  updateBestSolution: PropTypes.func.isRequired,
+  // updateBestSolution: PropTypes.func.isRequired,
 };
 
 export default AutoProduceConsume;

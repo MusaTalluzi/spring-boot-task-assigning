@@ -38,6 +38,7 @@ import org.optaplanner.springboottaskassigning.repository.TaskRepository;
 import org.optaplanner.springboottaskassigning.solver.DefaultSolverManager;
 import org.optaplanner.springboottaskassigning.solver.SolverManager;
 import org.optaplanner.springboottaskassigning.solver.SolverStatus;
+import org.optaplanner.springboottaskassigning.utils.TaskAssigningGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -143,6 +144,12 @@ public class TaskAssigningSolverManagerService {
     @PreDestroy
     public void tearDown() {
         solverManager.shutdown();
+    }
+
+    public boolean solve(Long problemId, int taskListSize, int employeeListSize) {
+        TaskAssigningSolution generatedPlanningProblem =
+                new TaskAssigningGenerator(problemId).createTaskAssigningSolution(taskListSize, employeeListSize);
+        return solve(problemId, generatedPlanningProblem);
     }
 
     public boolean solve(Long problemId, TaskAssigningSolution planningProblem) {

@@ -3,9 +3,9 @@ import { Switch, Route, Redirect } from 'react-router-dom';
 
 import Header from './HeaderComponent';
 import Home from './HomeComponent';
-import TaskPage from './TaskPageComponent';
+// import TaskPage from './TaskPageComponent';
 
-import { updateBestSolution } from '../shared/kie-server-client';
+import { updateBestSolution } from '../shared/springboot-server-client';
 
 class Main extends Component {
   constructor(props) {
@@ -16,12 +16,17 @@ class Main extends Component {
       bestSolution: {},
     };
 
+    this.setTenantId = this.setTenantId.bind(this);
     this.handleGetSolution = this.handleGetSolution.bind(this);
     this.update = this.update.bind(this);
   }
 
   componentDidMount() {
     this.update();
+  }
+
+  setTenantId(tenantId) {
+    this.setState({ tenantId }, () => this.update());
   }
 
   update() {
@@ -51,10 +56,12 @@ class Main extends Component {
                 {...props}
                 bestSolution={this.state.bestSolution}
                 updateBestSolution={this.update}
+                tenantId={this.state.tenantId}
+                setTenantId={this.setTenantId}
               />
             )}
           />
-          <Route
+          {/* <Route
             exact
             path="/tasks"
             render={props => (
@@ -68,7 +75,7 @@ class Main extends Component {
                 updateBestSolution={this.update}
               />
             )}
-          />
+          /> */}
           <Redirect to="/home" />
         </Switch>
       </div>

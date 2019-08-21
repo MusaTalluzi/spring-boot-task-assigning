@@ -20,6 +20,7 @@ import java.util.function.Consumer;
 
 import org.optaplanner.core.api.score.Score;
 
+// TODO: add getSubmittedProblems and removeProblem
 public interface SolverManager<Solution_> {
 
     void solve(Object problemId,
