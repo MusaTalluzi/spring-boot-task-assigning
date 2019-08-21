@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import {
   Card, CardHeader, CardBody, Button, Modal,
-  Form, FormGroup, ActionGroup, Toolbar, ToolbarGroup, TextArea,
+  Form, FormGroup, ActionGroup, Toolbar, ToolbarGroup, TextArea, FormSelect, FormSelectOption,
 } from '@patternfly/react-core';
 import JXON from 'jxon';
 import PropTypes from 'prop-types';
@@ -11,20 +11,43 @@ import AutoProduceConsume from './AutoProduceConsumeComponent';
 
 import PROBLEM from '../shared/24tasks';
 // import PROBLEM from '../shared/simpleProblem';
+import { problems } from '../shared/constants';
 
-import { addProblem } from '../shared/kie-server-client';
+import { addProblem } from '../shared/springboot-server-client';
 
 class Home extends Component {
   constructor(props) {
     super(props);
     this.state = {
       isAddProblemModalOpen: false,
-      problem: JXON.xmlToString(JXON.jsToXml(PROBLEM)),
+      selectedProblemId: props.tenantId,
+      toBeSubmittedProblemId: 0,
+      allProblems: problems,
+      submittedProblems: [],
     };
 
     this.handleAddProblemModalToggle = this.handleAddProblemModalToggle.bind(this);
     this.handleAddProblemModalConfirm = this.handleAddProblemModalConfirm.bind(this);
     this.handleGetSolution = this.handleGetSolution.bind(this);
+    this.populateSelections = this.populateSelections.bind(this);
+  }
+
+  componentDidMount() {
+    // TODO: query server for existing problems
+    this.submitProblem(this.state.toBeSubmittedProblemId);
+  }
+
+  submitProblem = (problemId) => {
+    const newProblem = this.state.allProblems[problemId];
+    addProblem(newProblem.id, newProblem.taskLiseSize, newProblem.employeeListSize)
+      .then((response) => {
+        // TODO when adding querying server for existing problems, only execute the next lines if response is defined
+        this.setState(prevState => ({
+          submittedProblems: [...prevState.submittedProblems, newProblem],
+        }));
+        alert(`Problem ${newProblem.id} was submitted successfully.`);
+        this.props.updateBestSolution();
+      });
   }
 
   handleAddProblemModalToggle = () => {
@@ -33,18 +56,44 @@ class Home extends Component {
     }));
   }
 
-  handleAddProblemModalConfirm(event) {
-    event.preventDefault();
-    this.handleAddProblemModalToggle();
+  displayScore = score => `[${score.hardScores[0]}]hard/`
+    + `[${score.softScores[0]}`
+    + `/${score.softScores[1]}`
+    + `/${score.softScores[2]}`
+    + `/${score.softScores[3]}]soft`;
 
-    addProblem(this.state.problem, this.state.container.containerId, this.state.solver.id)
-      .then(response => alert('Problem submitted successfully, solver is solving now.'));
+  onProblemSelectionChange = (selectedProblemId, event) => {
+    event.preventDefault();
+    this.setState({ selectedProblemId });
+    this.props.setTenantId(parseInt(selectedProblemId, 10));
   }
 
-  handleGetSolution(event) {
+  onSubmitProblemSelectionChange = (toBeSubmittedProblemId, event) => {
+    event.preventDefault();
+    this.setState({ toBeSubmittedProblemId });
+  }
+
+  handleAddProblemModalConfirm = (event) => {
+    event.preventDefault();
+    this.handleAddProblemModalToggle();
+    this.submitProblem(this.state.toBeSubmittedProblemId);
+  }
+
+  handleGetSolution = (event) => {
     event.preventDefault();
     this.props.updateBestSolution();
   }
+
+  populateSelections = options => (
+    options.map((option, index) => (
+      <FormSelectOption
+        key={option.id}
+        isDisabled={false}
+        value={option.id}
+        label={option.label}
+      />
+    ))
+  );
 
   render() {
     return (
@@ -78,15 +127,16 @@ class Home extends Component {
                 <FormGroup
                   label="Problem"
                   isRequired
-                  fieldId="problem"
+                  fieldId="problemSubmit"
                 >
-                  <TextArea
-                    isRequired
-                    id="problem"
-                    rows="20"
-                    value={this.state.problem}
-                    onChange={(problem) => { this.setState({ problem }); }}
-                  />
+                  <FormSelect
+                    value={this.state.toBeSubmittedProblemId}
+                    onChange={this.onSubmitProblemSelectionChange}
+                    id="problemSubmit"
+                    name="Submit problem"
+                  >
+                    {this.populateSelections(this.state.allProblems)}
+                  </FormSelect>
                 </FormGroup>
                 <ActionGroup>
                   <Toolbar>
@@ -100,6 +150,28 @@ class Home extends Component {
                 </ActionGroup>
               </Form>
             </Modal>
+          </div>
+        </div>
+
+        <div className="row mb-3">
+          <div className="col">
+            <Card className="text-center">
+              <CardHeader>Load an existing problem</CardHeader>
+              <CardBody>
+                <Form>
+                  <FormGroup label="Problem" fieldId="problemSelectionId">
+                    <FormSelect
+                      value={this.state.selectedProblemId}
+                      onChange={this.onProblemSelectionChange}
+                      id="problemSelectionId"
+                      name="Problem Selection"
+                    >
+                      {this.populateSelections(this.state.submittedProblems)}
+                    </FormSelect>
+                  </FormGroup>
+                </Form>
+              </CardBody>
+            </Card>
           </div>
         </div>
 
@@ -121,16 +193,7 @@ class Home extends Component {
             {this.props.bestSolution.score && (
               <div className="col-12">
                 Score:&nbsp;
-                &nbsp;Hard:
-                {this.props.bestSolution.score.hardScores[0]}
-                &nbsp;Soft0:
-                {this.props.bestSolution.score.softScores[0]}
-                &nbsp;Soft1:
-                {this.props.bestSolution.score.softScores[1]}
-                &nbsp;Soft2:
-                {this.props.bestSolution.score.softScores[2]}
-                &nbsp;Soft3:
-                {this.props.bestSolution.score.softScores[3]}
+                {this.displayScore(this.props.bestSolution.score)}
               </div>
             )}
           </CardHeader>
@@ -146,6 +209,8 @@ class Home extends Component {
 Home.propTypes = {
   bestSolution: PropTypes.instanceOf(Object).isRequired,
   updateBestSolution: PropTypes.func.isRequired,
+  tenantId: PropTypes.number.isRequired,
+  setTenantId: PropTypes.func.isRequired,
 };
 
 export default Home;

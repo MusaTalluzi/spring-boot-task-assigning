@@ -43,6 +43,13 @@ public class TaskAssigningSolverManagerController {
         }
     }
 
+    @PostMapping("/generate/{taskListSize}/{employeeListSize}")
+    void solve(@PathVariable Long problemId, @PathVariable int taskListSize, @PathVariable int employeeListSize) {
+        if (!solverManagerService.solve(problemId, taskListSize, employeeListSize)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Problem (" + problemId + ") already exists.");
+        }
+    }
+
     @GetMapping("/bestSolution")
     public TaskAssigningSolution bestSolution(@PathVariable Long problemId) {
         TaskAssigningSolution bestSolution = solverManagerService.getBestSolution(problemId);
