@@ -41,8 +41,9 @@ public class TaskAssigningGenerator {
 
     private static final Logger logger = LoggerFactory.getLogger(TaskAssigningGenerator.class);
 
-    private static final int BASE_DURATION_MINIMUM = 30;
-    private static final int BASE_DURATION_MAXIMUM = 90;
+    private static final int BASE_DURATION_MINIMUM = 1;
+    private static final int BASE_DURATION_MAXIMUM = 3;
+    private static final int BASE_DURATION_MULTIPLIER = 30;
     private static final int SKILL_SET_SIZE_MINIMUM = 2;
     private static final int SKILL_SET_SIZE_MAXIMUM = 4;
 
@@ -245,7 +246,8 @@ public class TaskAssigningGenerator {
             codeSet.add(code);
             taskType.setCode(code);
             taskType.setBaseDuration(
-                    BASE_DURATION_MINIMUM + random.nextInt(BASE_DURATION_MAXIMUM - BASE_DURATION_MINIMUM));
+                    (BASE_DURATION_MINIMUM + random.nextInt(BASE_DURATION_MAXIMUM - BASE_DURATION_MINIMUM))
+                            * BASE_DURATION_MULTIPLIER);
             Employee randomEmployee = employeeList.get(random.nextInt(employeeList.size()));
             ArrayList<Skill> randomSkillList = new ArrayList<>(randomEmployee.getSkillSet());
             Collections.shuffle(randomSkillList, random);

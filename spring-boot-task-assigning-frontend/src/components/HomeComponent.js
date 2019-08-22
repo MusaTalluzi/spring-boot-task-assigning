@@ -1,19 +1,15 @@
 import React, { Component } from 'react';
 import {
   Card, CardHeader, CardBody, Button, Modal,
-  Form, FormGroup, ActionGroup, Toolbar, ToolbarGroup, TextArea, FormSelect, FormSelectOption,
+  Form, FormGroup, ActionGroup, Toolbar, ToolbarGroup, FormSelect, FormSelectOption,
 } from '@patternfly/react-core';
-import JXON from 'jxon';
 import PropTypes from 'prop-types';
 
 import Schedule from './ScheduleComponent';
-import AutoProduceConsume from './AutoProduceConsumeComponent';
 
-import PROBLEM from '../shared/24tasks';
-// import PROBLEM from '../shared/simpleProblem';
 import { problems } from '../shared/constants';
 
-import { addProblem } from '../shared/springboot-server-client';
+import { addProblem, loadSubmittedProblemIds } from '../shared/springboot-server-client';
 
 class Home extends Component {
   constructor(props) {
@@ -33,20 +29,28 @@ class Home extends Component {
   }
 
   componentDidMount() {
-    // TODO: query server for existing problems
-    this.submitProblem(this.state.toBeSubmittedProblemId);
+    loadSubmittedProblemIds()
+      .then(response => response.json())
+      .then((submittedProblemIds) => {
+        const submittedProblems = [];
+        submittedProblemIds.forEach((submittedProblemId) => {
+          submittedProblems.push(this.state.allProblems[submittedProblemId]);
+        });
+        this.setState({ submittedProblems });
+      });
   }
 
   submitProblem = (problemId) => {
     const newProblem = this.state.allProblems[problemId];
     addProblem(newProblem.id, newProblem.taskLiseSize, newProblem.employeeListSize)
       .then((response) => {
-        // TODO when adding querying server for existing problems, only execute the next lines if response is defined
-        this.setState(prevState => ({
-          submittedProblems: [...prevState.submittedProblems, newProblem],
-        }));
-        alert(`Problem ${newProblem.id} was submitted successfully.`);
-        this.props.updateBestSolution();
+        if (response) {
+          this.setState(prevState => ({
+            submittedProblems: [...prevState.submittedProblems, newProblem],
+          }));
+          alert(`Problem ${newProblem.id} was submitted successfully.`);
+          this.props.updateBestSolution();
+        }
       });
   }
 
@@ -56,7 +60,7 @@ class Home extends Component {
     }));
   }
 
-  displayScore = score => `[${score.hardScores[0]}]hard/`
+  displayScore = score => `[${score.hardScores[0]}]hard / `
     + `[${score.softScores[0]}`
     + `/${score.softScores[1]}`
     + `/${score.softScores[2]}`
@@ -172,19 +176,6 @@ class Home extends Component {
                 </Form>
               </CardBody>
             </Card>
-          </div>
-        </div>
-
-        <div className="row mb-4">
-          <div className="col-12">
-            <AutoProduceConsume
-              tasks={this.props.bestSolution.taskList ? this.props.bestSolution.taskList : []}
-              taskTypes={this.props.bestSolution.taskTypeList
-                ? this.props.bestSolution.taskTypeList : []}
-              customers={this.props.bestSolution.customerList
-                ? this.props.bestSolution.customerList : []}
-              updateBestSolution={this.props.updateBestSolution}
-            />
           </div>
         </div>
 
