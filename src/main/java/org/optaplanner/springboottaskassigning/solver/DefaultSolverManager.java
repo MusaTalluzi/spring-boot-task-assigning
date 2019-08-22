@@ -42,8 +42,8 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
 
     // TODO SolverManager should be SOLVER_CONFIG agnostic, it should take the solver configuration as a constructor argument
     // TODO i.e. InputStream/File ...
-    public DefaultSolverManager(String solverConfig) {
-        solverFactory = SolverFactory.createFromXmlResource(solverConfig, DefaultSolverManager.class.getClassLoader());
+    public DefaultSolverManager() {
+        solverFactory = SolverFactory.createFromXmlResource(SOLVER_CONFIG, DefaultSolverManager.class.getClassLoader());
         problemIdToSolverTaskMap = new ConcurrentHashMap<>();
         int numAvailableProcessors = Runtime.getRuntime().availableProcessors();
         logger.info("Number of available processors: {}.", numAvailableProcessors);

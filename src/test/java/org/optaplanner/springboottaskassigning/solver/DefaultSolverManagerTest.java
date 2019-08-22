@@ -45,7 +45,7 @@ public class DefaultSolverManagerTest {
 
     @Before
     public void setup() {
-        solverManager = new DefaultSolverManager<>(DefaultSolverManager.SOLVER_CONFIG);
+        solverManager = new DefaultSolverManager<>();
         tenantId = 0L;
         solutionChangedLatch = new CountDownLatch(1);
         solvingEndedLatch = new CountDownLatch(1);

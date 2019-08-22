@@ -61,7 +61,7 @@ public class TaskAssigningSolverManagerService {
                                              TaskRepository taskRepository) {
         this.taskAssigningSolutionRepository = taskAssigningSolutionRepository;
         this.taskRepository = taskRepository;
-        solverManager = new DefaultSolverManager<>(DefaultSolverManager.SOLVER_CONFIG);
+        solverManager = new DefaultSolverManager<>();
 
         onBestSolutionChangedEvent = taskAssigningSolution -> {
             logger.debug("Best solution changed.");
