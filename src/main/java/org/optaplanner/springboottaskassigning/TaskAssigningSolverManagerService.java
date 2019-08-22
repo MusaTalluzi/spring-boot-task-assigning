@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -60,6 +61,8 @@ public class TaskAssigningSolverManagerService {
                                              TaskRepository taskRepository) {
         this.taskAssigningSolutionRepository = taskAssigningSolutionRepository;
         this.taskRepository = taskRepository;
+        solverManager = new DefaultSolverManager<>(DefaultSolverManager.SOLVER_CONFIG);
+
         onBestSolutionChangedEvent = taskAssigningSolution -> {
             logger.debug("Best solution changed.");
             try {
@@ -135,7 +138,6 @@ public class TaskAssigningSolverManagerService {
 
     @PostConstruct
     public void loadExistingProblemsAndStartSolving() {
-        solverManager = new DefaultSolverManager<>();
         List<TaskAssigningSolution> solutionList = taskAssigningSolutionRepository.findAll();
         solutionList
                 .forEach(taskAssigningSolution -> solve(taskAssigningSolution.getTenantId(), taskAssigningSolution));
@@ -144,6 +146,10 @@ public class TaskAssigningSolverManagerService {
     @PreDestroy
     public void tearDown() {
         solverManager.shutdown();
+    }
+
+    public Set<Long> getSubmittedTenantsIds() {
+        return (Set<Long>)(Set<?>)solverManager.getProblemIds();
     }
 
     public boolean solve(Long problemId, int taskListSize, int employeeListSize) {

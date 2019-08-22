@@ -3,7 +3,6 @@ import { Switch, Route, Redirect } from 'react-router-dom';
 
 import Header from './HeaderComponent';
 import Home from './HomeComponent';
-// import TaskPage from './TaskPageComponent';
 
 import { updateBestSolution } from '../shared/springboot-server-client';
 
@@ -61,21 +60,6 @@ class Main extends Component {
               />
             )}
           />
-          {/* <Route
-            exact
-            path="/tasks"
-            render={props => (
-              <TaskPage
-                {...props}
-                tasks={this.state.bestSolution.taskList ? this.state.bestSolution.taskList : []}
-                taskTypes={this.state.bestSolution.taskTypeList
-                  ? this.state.bestSolution.taskTypeList : []}
-                customers={this.state.bestSolution.customerList
-                  ? this.state.bestSolution.customerList : []}
-                updateBestSolution={this.update}
-              />
-            )}
-          /> */}
           <Redirect to="/home" />
         </Switch>
       </div>

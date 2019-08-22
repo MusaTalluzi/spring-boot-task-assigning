@@ -1,5 +1,4 @@
 export default {
-  BASE_URI: '',
   MINUTE_STEP: 30,
   UNASSIGNED_ID: Number.MAX_SAFE_INTEGER,
   PRIORITIES: ['MINOR', 'MAJOR', 'CRITICAL'],
@@ -40,5 +39,35 @@ export const problems = [
     taskLiseSize: 100,
     employeeListSize: 16,
     label: '100 tasks 16 employees',
+  },
+  {
+    id: 5,
+    taskLiseSize: 200,
+    employeeListSize: 16,
+    label: '200 tasks 16 employees',
+  },
+  {
+    id: 6,
+    taskLiseSize: 400,
+    employeeListSize: 32,
+    label: '400 tasks 32 employees',
+  },
+  {
+    id: 7,
+    taskLiseSize: 400,
+    employeeListSize: 64,
+    label: '400 tasks 32 employees',
+  },
+  {
+    id: 8,
+    taskLiseSize: 600,
+    employeeListSize: 64,
+    label: '400 tasks 32 employees',
+  },
+  {
+    id: 9,
+    taskLiseSize: 1000,
+    employeeListSize: 128,
+    label: '400 tasks 32 employees',
   },
 ];

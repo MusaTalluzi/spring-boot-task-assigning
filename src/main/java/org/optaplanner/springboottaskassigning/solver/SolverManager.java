@@ -16,11 +16,11 @@
 
 package org.optaplanner.springboottaskassigning.solver;
 
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.optaplanner.core.api.score.Score;
 
-// TODO: add getSubmittedProblems and removeProblem
 public interface SolverManager<Solution_> {
 
     void solve(Object problemId,
@@ -45,4 +45,6 @@ public interface SolverManager<Solution_> {
     SolverStatus getSolverStatus(Object problemId);
 
     void shutdown();
+
+    Set<Object> getProblemIds();
 }

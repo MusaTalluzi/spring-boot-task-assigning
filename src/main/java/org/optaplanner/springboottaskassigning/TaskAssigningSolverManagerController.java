@@ -16,6 +16,9 @@
 
 package org.optaplanner.springboottaskassigning;
 
+import java.util.List;
+import java.util.Set;
+
 import org.optaplanner.core.api.score.Score;
 import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution;
 import org.optaplanner.springboottaskassigning.solver.SolverStatus;
@@ -30,27 +33,32 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
-@RequestMapping("/tenants/{problemId}/solver")
+@RequestMapping("/tenants")
 public class TaskAssigningSolverManagerController {
 
     @Autowired
     private TaskAssigningSolverManagerService solverManagerService;
 
-    @PostMapping
+    @GetMapping
+    public Set<Long> getSubmittedTenantsIds() {
+        return solverManagerService.getSubmittedTenantsIds();
+    }
+
+    @PostMapping("/{problemId}/solver")
     public void solve(@PathVariable Long problemId, @RequestBody TaskAssigningSolution planningProblem) {
         if (!solverManagerService.solve(problemId, planningProblem)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Problem (" + problemId + ") already exists.");
         }
     }
 
-    @PostMapping("/generate/{taskListSize}/{employeeListSize}")
+    @PostMapping("/{problemId}/solver/generate/{taskListSize}/{employeeListSize}")
     void solve(@PathVariable Long problemId, @PathVariable int taskListSize, @PathVariable int employeeListSize) {
         if (!solverManagerService.solve(problemId, taskListSize, employeeListSize)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Problem (" + problemId + ") already exists.");
         }
     }
 
-    @GetMapping("/bestSolution")
+    @GetMapping("/{problemId}/solver/bestSolution")
     public TaskAssigningSolution bestSolution(@PathVariable Long problemId) {
         TaskAssigningSolution bestSolution = solverManagerService.getBestSolution(problemId);
         if (bestSolution == null) {
@@ -60,7 +68,7 @@ public class TaskAssigningSolverManagerController {
         return bestSolution;
     }
 
-    @GetMapping("/bestScore")
+    @GetMapping("/{problemId}/solver/bestScore")
     public Score bestScore(@PathVariable Long problemId) {
         Score score = solverManagerService.getBestScore(problemId);
         if (score == null) {
@@ -70,7 +78,7 @@ public class TaskAssigningSolverManagerController {
         return score;
     }
 
-    @GetMapping("/status")
+    @GetMapping("/{problemId}/solver/status")
     public SolverStatus solverStatus(@PathVariable Long problemId) {
         SolverStatus status = solverManagerService.getSolverStatus(problemId);
         if (status == null) {

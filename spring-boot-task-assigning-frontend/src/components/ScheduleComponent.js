@@ -29,7 +29,7 @@ const extractScheduler = (bestSolution) => {
   const schedulerData = new SchedulerData(moment(startDate).format(DATE_FORMAT), ViewTypes.Day);
   schedulerData.localeMoment.locale('en');
   schedulerData.config.schedulerWidth = 750;
-  schedulerData.config.dayCellWidth = 100;
+  schedulerData.config.dayCellWidth = 50;
   schedulerData.behaviors.isNonWorkingTimeFunc = () => false;
   schedulerData.setMinuteStep(constants.MINUTE_STEP);
 
