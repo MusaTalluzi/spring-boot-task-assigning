@@ -33,6 +33,9 @@
   <!--<daemon>true</daemon>-->
 
   <termination>
-    <minutesSpentLimit>2</minutesSpentLimit>
+    <!-- Temporary short terminating limit to keep tests fast
+    TODO change to <minutesSpentLimit>2</minutesSpentLimit> after implementing persistence and bestSolutionChangedEvent
+ -->
+    <secondsSpentLimit>1</secondsSpentLimit>
   </termination>
 </solver>
