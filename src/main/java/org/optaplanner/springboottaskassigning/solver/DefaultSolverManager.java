@@ -16,10 +16,9 @@
 
 package org.optaplanner.springboottaskassigning.solver;
 
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -38,7 +37,7 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     private ExecutorService solverExecutorService;
     private ExecutorService eventHandlerExecutorService;
     private SolverFactory<Solution_> solverFactory;
-    private Map<Object, SolverTask<Solution_>> problemIdToSolverTaskMap;
+    private ConcurrentMap<Object, SolverTask<Solution_>> problemIdToSolverTaskMap;
 
     // TODO SolverManager should be SOLVER_CONFIG agnostic, it should take the solver configuration as a constructor argument
     // TODO i.e. InputStream/File ...
@@ -156,11 +155,6 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
         solverExecutorService.shutdownNow();
         eventHandlerExecutorService.shutdownNow();
         stopSolvers(); // TODO is this necessary?
-    }
-
-    @Override
-    public Set<Object> getProblemIds() {
-        return problemIdToSolverTaskMap.keySet();
     }
 
     private void stopSolvers() {

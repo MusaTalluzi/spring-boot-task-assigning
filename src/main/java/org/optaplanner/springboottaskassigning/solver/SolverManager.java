@@ -16,7 +16,6 @@
 
 package org.optaplanner.springboottaskassigning.solver;
 
-import java.util.Set;
 import java.util.function.Consumer;
 
 import org.optaplanner.core.api.score.Score;
@@ -45,6 +44,4 @@ public interface SolverManager<Solution_> {
     SolverStatus getSolverStatus(Object problemId);
 
     void shutdown();
-
-    Set<Object> getProblemIds();
 }

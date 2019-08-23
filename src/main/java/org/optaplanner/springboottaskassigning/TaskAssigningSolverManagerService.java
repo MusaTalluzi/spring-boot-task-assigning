@@ -149,7 +149,9 @@ public class TaskAssigningSolverManagerService {
     }
 
     public Set<Long> getSubmittedTenantsIds() {
-        return (Set<Long>)(Set<?>)solverManager.getProblemIds();
+        return taskAssigningSolutionRepository.findAll().stream()
+                .map(TaskAssigningSolution::getTenantId)
+                .collect(Collectors.toSet());
     }
 
     public boolean solve(Long problemId, int taskListSize, int employeeListSize) {

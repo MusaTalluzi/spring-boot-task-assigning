@@ -45,8 +45,10 @@ public class SolverTask<Solution_> {
         return problemId;
     }
 
-    public Solution_ getBestSolution() {
-        return solver.getBestSolution();
+    public synchronized Solution_ getBestSolution() {
+        // TODO possible race condition: planningProblem might change by solver thread
+        Solution_ bestSolution = solver.getBestSolution();
+        return bestSolution == null ? planningProblem : bestSolution;
     }
 
     public Score getBestScore() {
