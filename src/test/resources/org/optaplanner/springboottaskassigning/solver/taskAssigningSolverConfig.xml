@@ -16,13 +16,10 @@
   -->
 
 <solver>
-  <!--<environmentMode>FULL_ASSERT</environmentMode>--><!-- To slowly prove there are no bugs in this code -->
-  <!--<moveThreadCount>AUTO</moveThreadCount>--><!-- To solve faster by saturating multiple CPU cores -->
-
   <!-- Domain model configuration -->
   <solutionClass>org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution</solutionClass>
   <entityClass>org.optaplanner.springboottaskassigning.domain.TaskOrEmployee</entityClass>
-  <entityClass>org.optaplanner.springboottaskassigning.domain.Task</entityClass>
+  <entityClass>org.optaplanner.springboottaskassigning.domain.Task</entityClass>42
 
   <!-- Score configuration -->
   <scoreDirectorFactory>
@@ -30,12 +27,7 @@
     <initializingScoreTrend>ONLY_DOWN</initializingScoreTrend>
   </scoreDirectorFactory>
 
-  <!--<daemon>true</daemon>-->
-
   <termination>
-    <!-- Temporary short terminating limit to keep tests fast
-    TODO change to <minutesSpentLimit>2</minutesSpentLimit> after implementing persistence and bestSolutionChangedEvent
- -->
-    <secondsSpentLimit>1</secondsSpentLimit>
+    <millisecondsSpentLimit>100</millisecondsSpentLimit>
   </termination>
 </solver>

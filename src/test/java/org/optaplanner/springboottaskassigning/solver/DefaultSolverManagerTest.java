@@ -59,7 +59,7 @@ public class DefaultSolverManagerTest {
     @Test
     public void basicUsageOfSolverManagerWithOneProblem() throws InterruptedException {
         TaskAssigningSolution problem =
-                new TaskAssigningGenerator(tenantId).createTaskAssigningSolution(24, 4);
+                new TaskAssigningGenerator(tenantId).createTaskAssigningSolution(4, 2);
         solverManager.solve(tenantId, problem,
                 taskAssigningSolution -> solutionChangedLatch.countDown(),
                 taskAssigningSolution -> solvingEndedLatch.countDown());
