@@ -16,9 +16,6 @@
   -->
 
 <solver>
-  <!--<environmentMode>FULL_ASSERT</environmentMode>--><!-- To slowly prove there are no bugs in this code -->
-  <!--<moveThreadCount>AUTO</moveThreadCount>--><!-- To solve faster by saturating multiple CPU cores -->
-
   <!-- Domain model configuration -->
   <solutionClass>org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution</solutionClass>
   <entityClass>org.optaplanner.springboottaskassigning.domain.TaskOrEmployee</entityClass>
@@ -29,8 +26,6 @@
     <scoreDrl>org/optaplanner/springboottaskassigning/solver/taskAssigningScoreRules.drl</scoreDrl>
     <initializingScoreTrend>ONLY_DOWN</initializingScoreTrend>
   </scoreDirectorFactory>
-
-  <!--<daemon>true</daemon>-->
 
   <termination>
     <minutesSpentLimit>2</minutesSpentLimit>
