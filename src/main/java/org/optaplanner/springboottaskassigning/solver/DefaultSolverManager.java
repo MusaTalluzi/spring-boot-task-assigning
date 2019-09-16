@@ -38,7 +38,15 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     private ConcurrentMap<Object, SolverTask<Solution_>> problemIdToSolverTaskMap;
 
     public DefaultSolverManager(String solverConfigResource) {
-        solverFactory = SolverFactory.createFromXmlResource(solverConfigResource, DefaultSolverManager.class.getClassLoader());
+        this(solverConfigResource, null);
+    }
+
+    public DefaultSolverManager(String solverConfigResource, ClassLoader classLoader) {
+        if (classLoader != null) {
+            solverFactory = SolverFactory.createFromXmlResource(solverConfigResource, classLoader);
+        } else {
+            solverFactory = SolverFactory.createFromXmlResource(solverConfigResource);
+        }
         problemIdToSolverTaskMap = new ConcurrentHashMap<>();
         int numAvailableProcessors = Runtime.getRuntime().availableProcessors();
         logger.info("Number of available processors: {}.", numAvailableProcessors);

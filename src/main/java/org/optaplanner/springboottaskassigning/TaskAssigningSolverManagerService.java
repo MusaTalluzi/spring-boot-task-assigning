@@ -62,7 +62,7 @@ public class TaskAssigningSolverManagerService {
                                              TaskRepository taskRepository) {
         this.taskAssigningSolutionRepository = taskAssigningSolutionRepository;
         this.taskRepository = taskRepository;
-        solverManager = SolverManager.createFromXmlResource(SOLVER_CONFIG);
+        solverManager = SolverManager.createFromXmlResource(SOLVER_CONFIG, getClass().getClassLoader());
 
 
         onBestSolutionChangedEvent = taskAssigningSolution -> {
