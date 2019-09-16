@@ -26,6 +26,10 @@ public interface SolverManager<Solution_> {
         return new DefaultSolverManager<>(solverConfigResource);
     }
 
+    static <Solution_> DefaultSolverManager<Solution_> createFromXmlResource(String solverConfigResource, ClassLoader classLoader) {
+        return new DefaultSolverManager<>(solverConfigResource, classLoader);
+    }
+
     void solve(Object problemId,
                Solution_ planningProblem,
                Consumer<Solution_> onBestSolutionChangedEvent,
