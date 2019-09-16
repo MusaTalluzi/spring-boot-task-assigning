@@ -36,7 +36,6 @@ import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution;
 import org.optaplanner.springboottaskassigning.domain.TaskOrEmployee;
 import org.optaplanner.springboottaskassigning.repository.TaskAssigningSolutionRepository;
 import org.optaplanner.springboottaskassigning.repository.TaskRepository;
-import org.optaplanner.springboottaskassigning.solver.DefaultSolverManager;
 import org.optaplanner.springboottaskassigning.solver.SolverManager;
 import org.optaplanner.springboottaskassigning.solver.SolverStatus;
 import org.optaplanner.springboottaskassigning.utils.TaskAssigningGenerator;
@@ -47,6 +46,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TaskAssigningSolverManagerService {
+
+    public static final String SOLVER_CONFIG = "org/optaplanner/springboottaskassigning/solver/taskAssigningSolverConfig.xml";
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -61,7 +62,8 @@ public class TaskAssigningSolverManagerService {
                                              TaskRepository taskRepository) {
         this.taskAssigningSolutionRepository = taskAssigningSolutionRepository;
         this.taskRepository = taskRepository;
-        solverManager = new DefaultSolverManager<>();
+        solverManager = SolverManager.createFromXmlResource(SOLVER_CONFIG);
+
 
         onBestSolutionChangedEvent = taskAssigningSolution -> {
             logger.debug("Best solution changed.");

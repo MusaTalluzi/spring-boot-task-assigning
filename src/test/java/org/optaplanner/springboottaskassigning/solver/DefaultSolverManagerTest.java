@@ -36,6 +36,8 @@ import static org.junit.Assert.assertTrue;
 
 public class DefaultSolverManagerTest {
 
+    public static final String SOLVER_CONFIG = "org/optaplanner/springboottaskassigning/solver/taskAssigningSolverConfig.xml";
+
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private SolverManager<TaskAssigningSolution> solverManager;
@@ -45,7 +47,7 @@ public class DefaultSolverManagerTest {
 
     @Before
     public void setup() {
-        solverManager = new DefaultSolverManager<>();
+        solverManager = SolverManager.createFromXmlResource(SOLVER_CONFIG);
         tenantId = 0L;
         solutionChangedLatch = new CountDownLatch(1);
         solvingEndedLatch = new CountDownLatch(1);

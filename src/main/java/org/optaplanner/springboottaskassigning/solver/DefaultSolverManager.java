@@ -32,20 +32,17 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultSolverManager.class);
 
-    public static final String SOLVER_CONFIG = "org/optaplanner/springboottaskassigning/solver/taskAssigningSolverConfig.xml";
-
     private ExecutorService solverExecutorService;
     private ExecutorService eventHandlerExecutorService;
     private SolverFactory<Solution_> solverFactory;
     private ConcurrentMap<Object, SolverTask<Solution_>> problemIdToSolverTaskMap;
 
-    // TODO SolverManager should be SOLVER_CONFIG agnostic, it should take the solver configuration as a constructor argument
-    // TODO i.e. InputStream/File ...
-    public DefaultSolverManager() {
-        solverFactory = SolverFactory.createFromXmlResource(SOLVER_CONFIG, DefaultSolverManager.class.getClassLoader());
+    public DefaultSolverManager(String solverConfigResource) {
+        solverFactory = SolverFactory.createFromXmlResource(solverConfigResource, DefaultSolverManager.class.getClassLoader());
         problemIdToSolverTaskMap = new ConcurrentHashMap<>();
         int numAvailableProcessors = Runtime.getRuntime().availableProcessors();
         logger.info("Number of available processors: {}.", numAvailableProcessors);
+        // TODO add ThreadFactory to executors
         solverExecutorService = Executors.newFixedThreadPool(numAvailableProcessors - 1);
         eventHandlerExecutorService = Executors.newSingleThreadExecutor();
     }
@@ -126,7 +123,7 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     }
 
     @Override
-    public Score getBestScore(Object problemId) {
+    public Score<?> getBestScore(Object problemId) {
         logger.debug("Getting best score of problemId ({}).", problemId);
         SolverTask<Solution_> solverTask = problemIdToSolverTaskMap.get(problemId);
         if (solverTask == null) {
