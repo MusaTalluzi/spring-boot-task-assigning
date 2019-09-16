@@ -51,7 +51,7 @@ public class SolverTask<Solution_> {
         return bestSolution == null ? planningProblem : bestSolution;
     }
 
-    public Score getBestScore() {
+    public Score<?> getBestScore() {
         return solver.getBestScore();
     }
 

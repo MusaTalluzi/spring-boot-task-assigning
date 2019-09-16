@@ -22,6 +22,10 @@ import org.optaplanner.core.api.score.Score;
 
 public interface SolverManager<Solution_> {
 
+    static <Solution_> SolverManager<Solution_> createFromXmlResource(String solverConfigResource) {
+        return new DefaultSolverManager<>(solverConfigResource);
+    }
+
     void solve(Object problemId,
                Solution_ planningProblem,
                Consumer<Solution_> onBestSolutionChangedEvent,
@@ -39,7 +43,7 @@ public interface SolverManager<Solution_> {
 
     Solution_ getBestSolution(Object problemId);
 
-    Score getBestScore(Object problemId);
+    Score<?> getBestScore(Object problemId);
 
     SolverStatus getSolverStatus(Object problemId);
 

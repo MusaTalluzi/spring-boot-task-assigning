@@ -50,6 +50,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class TaskAssigningSolverManagerControllerTest {
 
     private static final Logger logger = LoggerFactory.getLogger(TaskAssigningSolverManagerControllerTest.class);
+    public static final String SOLVER_CONFIG = "org/optaplanner/springboottaskassigning/solver/taskAssigningSolverConfig.xml";
 
     @Autowired
     private MockMvc mockMvc;
@@ -58,7 +59,7 @@ public class TaskAssigningSolverManagerControllerTest {
     private ObjectMapper objectMapper;
 
     private BendableScoreVerifier<TaskAssigningSolution> scoreVerifier = new BendableScoreVerifier<>(
-            SolverFactory.createFromXmlResource(DefaultSolverManager.SOLVER_CONFIG)
+            SolverFactory.createFromXmlResource(SOLVER_CONFIG)
     );
 
     private static AtomicLong newTenantId;
