@@ -21,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.function.Consumer;
 
 import org.optaplanner.core.api.score.Score;
@@ -38,21 +39,36 @@ public class DefaultSolverManager<Solution_> implements SolverManager<Solution_>
     private ConcurrentMap<Object, SolverTask<Solution_>> problemIdToSolverTaskMap;
 
     public DefaultSolverManager(String solverConfigResource) {
-        this(solverConfigResource, null);
+        this(solverConfigResource, null, null);
     }
 
     public DefaultSolverManager(String solverConfigResource, ClassLoader classLoader) {
+        this(solverConfigResource, classLoader, null);
+    }
+
+    public DefaultSolverManager(String solverConfigResource, ThreadFactory threadFactory) {
+        this(solverConfigResource, null, threadFactory);
+    }
+
+    public DefaultSolverManager(String solverConfigResource, ClassLoader classLoader, ThreadFactory threadFactory) {
         if (classLoader != null) {
             solverFactory = SolverFactory.createFromXmlResource(solverConfigResource, classLoader);
         } else {
             solverFactory = SolverFactory.createFromXmlResource(solverConfigResource);
         }
+
         problemIdToSolverTaskMap = new ConcurrentHashMap<>();
         int numAvailableProcessors = Runtime.getRuntime().availableProcessors();
         logger.info("Number of available processors: {}.", numAvailableProcessors);
-        // TODO add ThreadFactory to executors
-        solverExecutorService = Executors.newFixedThreadPool(numAvailableProcessors - 1);
-        eventHandlerExecutorService = Executors.newSingleThreadExecutor();
+
+        if (threadFactory != null) {
+            solverFactory.getSolverConfig().setThreadFactoryClass(threadFactory.getClass());
+            solverExecutorService = Executors.newFixedThreadPool(numAvailableProcessors - 1, threadFactory);
+            eventHandlerExecutorService = Executors.newSingleThreadExecutor(threadFactory);
+        } else {
+            solverExecutorService = Executors.newFixedThreadPool(numAvailableProcessors - 1);
+            eventHandlerExecutorService = Executors.newSingleThreadExecutor();
+        }
     }
 
     @Override
