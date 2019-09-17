@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.optaplanner.core.api.domain.solution.Solution;
 import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution;
 import org.optaplanner.springboottaskassigning.utils.TaskAssigningGenerator;
 import org.slf4j.Logger;
@@ -74,6 +75,16 @@ public class DefaultSolverManagerTest {
         solverManager.stopSolver(tenantId);
         assertEquals(SolverStatus.TERMINATED_EARLY, solverManager.getSolverStatus(tenantId));
         logger.info(String.valueOf(solvingEndedLatch.getCount()));
+    }
+
+    @Test(timeout = 5000L)
+    public void customThreadFactoryClassIsUsed() {
+        solverManager = SolverManager.createFromXmlResource(SOLVER_CONFIG, new MockThreadFactory());
+        TaskAssigningSolution problem =
+                new TaskAssigningGenerator(tenantId).createTaskAssigningSolution(1, 1);
+        solverManager.solve(tenantId, problem, taskAssigningSolution -> solutionChangedLatch.countDown(), null);
+        solutionChangedLatch.countDown();
+        assertTrue(MockThreadFactory.hasBeenCalled());
     }
 
     @Test

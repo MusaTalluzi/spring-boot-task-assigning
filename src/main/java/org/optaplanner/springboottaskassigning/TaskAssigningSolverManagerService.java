@@ -64,7 +64,6 @@ public class TaskAssigningSolverManagerService {
         this.taskRepository = taskRepository;
         solverManager = SolverManager.createFromXmlResource(SOLVER_CONFIG, getClass().getClassLoader());
 
-
         onBestSolutionChangedEvent = taskAssigningSolution -> {
             logger.debug("Best solution changed.");
             try {
@@ -89,7 +88,7 @@ public class TaskAssigningSolverManagerService {
     }
 
     @Transactional
-    private void updateSolution(TaskAssigningSolution taskAssigningSolution) {
+    public void updateSolution(TaskAssigningSolution taskAssigningSolution) {
         Long tenantId = taskAssigningSolution.getTenantId();
         Optional<TaskAssigningSolution> solutionEntityOptional = taskAssigningSolutionRepository.findById(taskAssigningSolution.getId());
         if (solutionEntityOptional.isPresent()) {
@@ -121,18 +120,18 @@ public class TaskAssigningSolverManagerService {
             taskEntity.setPreviousTaskOrEmployee(employeeEntityMap.get(newPreviousTaskOrEmployee.getId()));
         } else {
             throw new IllegalArgumentException("previousTaskOrEmployee of task (" + newTask.getId() + ") is neither " +
-                    "an Employee nor a Task.");
+                                                       "an Employee nor a Task.");
         }
         taskEntity.getPreviousTaskOrEmployee().setNextTask(taskEntity);
 
         taskEntity.setNextTask(Objects.isNull(newTask.getNextTask()) ? null
-                : taskEntityMap.get(newTask.getNextTask().getId()));
+                                       : taskEntityMap.get(newTask.getNextTask().getId()));
         if (Objects.nonNull(taskEntity.getNextTask())) {
             taskEntity.getNextTask().setPreviousTaskOrEmployee(taskEntity);
         }
 
         taskEntity.setEmployee(Objects.isNull(newTask.getEmployee()) ? null
-                : employeeEntityMap.get(newTask.getEmployee().getId()));
+                                       : employeeEntityMap.get(newTask.getEmployee().getId()));
         taskEntity.setStartTime(newTask.getStartTime());
         taskEntity.setEndTime(newTask.getEndTime());
         taskRepository.save(taskEntity);

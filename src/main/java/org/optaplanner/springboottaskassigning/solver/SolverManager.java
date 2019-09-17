@@ -16,6 +16,7 @@
 
 package org.optaplanner.springboottaskassigning.solver;
 
+import java.util.concurrent.ThreadFactory;
 import java.util.function.Consumer;
 
 import org.optaplanner.core.api.score.Score;
@@ -28,6 +29,15 @@ public interface SolverManager<Solution_> {
 
     static <Solution_> DefaultSolverManager<Solution_> createFromXmlResource(String solverConfigResource, ClassLoader classLoader) {
         return new DefaultSolverManager<>(solverConfigResource, classLoader);
+    }
+
+    static <Solution_> SolverManager<Solution_> createFromXmlResource(String solverConfigResource, ThreadFactory threadFactory) {
+        return new DefaultSolverManager<>(solverConfigResource, threadFactory);
+    }
+
+    static <Solution_> SolverManager<Solution_> createFromXmlResource(String solverConfigResource,
+                                                                      ClassLoader classLoader, ThreadFactory threadFactory) {
+        return new DefaultSolverManager<>(solverConfigResource, classLoader, threadFactory);
     }
 
     void solve(Object problemId,
