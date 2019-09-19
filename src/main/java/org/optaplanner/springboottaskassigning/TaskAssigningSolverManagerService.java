@@ -30,14 +30,14 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
 import org.optaplanner.core.api.score.Score;
+import org.optaplanner.core.api.solver.manager.SolverManager;
+import org.optaplanner.core.api.solver.manager.SolverStatus;
 import org.optaplanner.springboottaskassigning.domain.Employee;
 import org.optaplanner.springboottaskassigning.domain.Task;
 import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution;
 import org.optaplanner.springboottaskassigning.domain.TaskOrEmployee;
 import org.optaplanner.springboottaskassigning.repository.TaskAssigningSolutionRepository;
 import org.optaplanner.springboottaskassigning.repository.TaskRepository;
-import org.optaplanner.springboottaskassigning.solver.SolverManager;
-import org.optaplanner.springboottaskassigning.solver.SolverStatus;
 import org.optaplanner.springboottaskassigning.utils.TaskAssigningGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

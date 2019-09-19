@@ -25,9 +25,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.optaplanner.core.api.solver.SolverFactory;
+import org.optaplanner.core.api.solver.manager.SolverStatus;
 import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution;
-import org.optaplanner.springboottaskassigning.solver.DefaultSolverManager;
-import org.optaplanner.springboottaskassigning.solver.SolverStatus;
 import org.optaplanner.springboottaskassigning.utils.TaskAssigningGenerator;
 import org.optaplanner.test.impl.score.buildin.bendable.BendableScoreVerifier;
 import org.slf4j.Logger;
@@ -139,13 +138,13 @@ public class TaskAssigningSolverManagerControllerTest {
 
     private void submitProblemsAndSolveThem(int problemSize, int taskListSizeBound, int employeeListSizeBound) {
         logger.info("Sumbitting {} problems with taskListSizeBound ({}) and employeeListSizeBound ({}).",
-                problemSize, taskListSizeBound, employeeListSizeBound);
+                    problemSize, taskListSizeBound, employeeListSizeBound);
         IntStream.range(0, problemSize).parallel().forEach(i -> {
             try {
                 logger.info("Submitting problem " + i);
                 // FIXME ThreadLocalRandom does not support setting a Random seed
                 submitOneProblemAndSolveIt(ThreadLocalRandom.current().nextInt(taskListSizeBound) + 1,
-                        ThreadLocalRandom.current().nextInt(employeeListSizeBound) + 1);
+                                           ThreadLocalRandom.current().nextInt(employeeListSizeBound) + 1);
             } catch (Exception e) {
                 if (e instanceof InterruptedException) {
                     Thread.currentThread().interrupt();
@@ -170,7 +169,7 @@ public class TaskAssigningSolverManagerControllerTest {
         TaskAssigningSolution solution;
         do { // keep trying until a new bestSolution with score has been updated
             String solutionAsJsonString = mockMvc.perform(get("/tenants/{tenantId}/solver/bestSolution", tenantId)
-                    .accept(MediaType.APPLICATION_JSON))
+                                                                  .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andReturn()
                     .getResponse()
@@ -178,18 +177,18 @@ public class TaskAssigningSolverManagerControllerTest {
             solution = objectMapper.readValue(solutionAsJsonString, TaskAssigningSolution.class);
         } while (solution.getScore() == null);
         scoreVerifier.assertHardWeight("Skill requirements",
-                0, solution.getScore().getHardScore(0), solution);
+                                       0, solution.getScore().getHardScore(0), solution);
         scoreVerifier.assertSoftWeight("Critical priority",
-                0, solution.getScore().getSoftScore(0), solution);
+                                       0, solution.getScore().getSoftScore(0), solution);
         scoreVerifier.assertSoftWeight("Minimze makespan (starting with the latest ending employee first)",
-                1, solution.getScore().getSoftScore(1), solution);
+                                       1, solution.getScore().getSoftScore(1), solution);
         scoreVerifier.assertSoftWeight("Major priority",
-                2, solution.getScore().getSoftScore(2), solution);
+                                       2, solution.getScore().getSoftScore(2), solution);
         scoreVerifier.assertSoftWeight("Minor priority",
-                3, solution.getScore().getSoftScore(3), solution);
+                                       3, solution.getScore().getSoftScore(3), solution);
 
         mockMvc.perform(get("/tenants/{tenantId}/solver/bestScore", tenantId)
-                .accept(MediaType.APPLICATION_JSON))
+                                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
         do { // Wait until solving ends
@@ -200,7 +199,7 @@ public class TaskAssigningSolverManagerControllerTest {
     private SolverStatus getSolverStatus(Long tenantId) throws Exception {
         SolverStatus solverStatus;
         String solverStatusAsJsonString = mockMvc.perform(get("/tenants/{tenantId}/solver/status", tenantId)
-                .accept(MediaType.APPLICATION_JSON))
+                                                                  .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
@@ -212,9 +211,9 @@ public class TaskAssigningSolverManagerControllerTest {
     private void solveProblem(TaskAssigningSolution planningProblem, Long tenantId, ResultMatcher resultMatcher) throws Exception {
         String planningProblemAsJsonString = objectMapper.writeValueAsString(planningProblem);
         mockMvc.perform(post("/tenants/{tenantId}/solver", tenantId)
-                .content(planningProblemAsJsonString)
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON))
+                                .content(planningProblemAsJsonString)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(resultMatcher);
     }
 }

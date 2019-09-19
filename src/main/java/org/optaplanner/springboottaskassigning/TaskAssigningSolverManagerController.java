@@ -16,12 +16,11 @@
 
 package org.optaplanner.springboottaskassigning;
 
-import java.util.List;
 import java.util.Set;
 
 import org.optaplanner.core.api.score.Score;
+import org.optaplanner.core.api.solver.manager.SolverStatus;
 import org.optaplanner.springboottaskassigning.domain.TaskAssigningSolution;
-import org.optaplanner.springboottaskassigning.solver.SolverStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -63,7 +62,7 @@ public class TaskAssigningSolverManagerController {
         TaskAssigningSolution bestSolution = solverManagerService.getBestSolution(problemId);
         if (bestSolution == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Problem (" + problemId + ") does not have a solver task submitted or solving has not started yet.");
+                                              "Problem (" + problemId + ") does not have a solver task submitted or solving has not started yet.");
         }
         return bestSolution;
     }
@@ -73,7 +72,7 @@ public class TaskAssigningSolverManagerController {
         Score score = solverManagerService.getBestScore(problemId);
         if (score == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Problem (" + problemId + ") does not have a solver task submitted or solving has not started yet.");
+                                              "Problem (" + problemId + ") does not have a solver task submitted or solving has not started yet.");
         }
         return score;
     }
@@ -83,7 +82,7 @@ public class TaskAssigningSolverManagerController {
         SolverStatus status = solverManagerService.getSolverStatus(problemId);
         if (status == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Problem (" + problemId + ") does not have a solver task submitted or solving has not started yet.");
+                                              "Problem (" + problemId + ") does not have a solver task submitted or solving has not started yet.");
         }
         return status;
     }
