@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@patternfly/react-core": "^1.51.6",
+    "@patternfly/react-core": "^4.267.6",
     "bootstrap": "^4.1.3",
     "jquery": "^3.3.1",
     "jxon": "^2.0.0-beta.5",
@@ -16,7 +16,7 @@
     "react-dnd-html5-backend": "5.0.1",
     "react-dom": "^16.6.1",
     "react-router-dom": "^4.3.1",
-    "react-scripts": "^2.1.3"
+    "react-scripts": "^5.0.1"
   },
   "scripts": {
     "start": "react-scripts start",
